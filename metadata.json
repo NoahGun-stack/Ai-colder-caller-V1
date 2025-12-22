@@ -1,0 +1,7 @@
+{
+  "name": "RoofPulse AI - Cold Call Platform",
+  "description": "An enterprise-grade AI cold calling platform specifically designed for roofing contractors to automate lead outreach, qualify prospects, and book inspections.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
