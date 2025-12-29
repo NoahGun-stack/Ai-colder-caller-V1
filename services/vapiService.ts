@@ -56,9 +56,8 @@ export const vapiService = {
                         INSTRUCTIONS:
                         1. If they agree to an appointment, ask for a time.
                         2. Book for the EXACT time they say.
-                        3. Format as "YYYY-MM-DDTHH:MM:SS".
-                        4. DO NOT convert to UTC. DO NOT apply timezone offsets.
-                        5. If they say "8pm", send "${now.getFullYear()}-...T20:00:00".`
+                        3. Format as "YYYY-MM-DDTHH:MM:SS-05:00" (Force EST offset).
+                        4. If they say "8pm", send "${now.getFullYear()}-...T20:00:00-05:00".`
                     }
                 ],
                 tools: [
