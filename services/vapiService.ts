@@ -33,6 +33,11 @@ export const vapiService = {
             throw new Error(`Call Blocked: Number is in your DNC list.`);
         }
 
+        // Get current time in EST for context
+        const now = new Date();
+        const estDate = now.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const estTime = now.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' });
+
         // Define Tool for Appointment Booking
         const assistantWithTools = {
             firstMessage: `Hello, is this ${customerName}?`,
@@ -42,7 +47,18 @@ export const vapiService = {
                 messages: [
                     {
                         role: "system",
-                        content: `You are a friendly but persistent roofing sales representative for RoofPulse. Your goal is to book a free roof inspection. You are speaking with ${customerName}. If they agree, ask for a time and use the book_appointment tool.`
+                        content: `You are a friendly but persistent roofing sales representative for RoofPulse. Your goal is to book a free roof inspection. You are speaking with ${customerName}. 
+                        
+                        CONTEXT:
+                        - Today is: ${estDate}
+                        - Current Time: ${estTime}
+
+                        INSTRUCTIONS:
+                        1. If they agree to an appointment, ask for a time.
+                        2. Book for the EXACT time they say.
+                        3. Format as "YYYY-MM-DDTHH:MM:SS".
+                        4. DO NOT convert to UTC. DO NOT apply timezone offsets.
+                        5. If they say "8pm", send "${now.getFullYear()}-...T20:00:00".`
                     }
                 ],
                 tools: [

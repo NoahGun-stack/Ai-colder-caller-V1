@@ -85,11 +85,25 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
         }
     };
 
-    const filteredContacts = contacts.filter(c =>
-        c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.phoneNumber.includes(searchTerm)
-    );
+    const [filterStatus, setFilterStatus] = useState<'all' | 'contacted' | 'uncontacted'>('all');
+
+    const filteredContacts = contacts.filter(c => {
+        const matchesSearch = c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.phoneNumber.includes(searchTerm);
+
+        if (!matchesSearch) return false;
+
+        // Exclude booked appointments from the main contact list
+        if (c.status === LeadStatus.APPOINTMENT_BOOKED) return false;
+
+        const isContacted = (c.totalCalls || 0) > 0;
+
+        if (filterStatus === 'contacted') return isContacted;
+        if (filterStatus === 'uncontacted') return !isContacted;
+
+        return true;
+    });
 
     return (
         <div className="h-full flex flex-row overflow-hidden">
@@ -107,8 +121,17 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
+                        <select
+                            className="border border-[#e5e7eb] text-[11px] font-bold uppercase text-[#111827] px-2 py-2 outline-none"
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value as any)}
+                        >
+                            <option value="all">All Contacts</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="uncontacted">Uncontacted</option>
+                        </select>
                         <span className="text-[11px] font-bold text-[#6b7280] uppercase tracking-wider bg-[#f3f4f6] px-2 py-1 rounded-sm">
-                            {contacts.length} Contacts
+                            {filteredContacts.length} Visible
                         </span>
                     </div>
                     <div className="flex gap-2">
@@ -156,8 +179,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                 <th className="w-8 px-4 text-left"><input type="checkbox" /></th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Name</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Phone Number</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Address</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Address</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Location</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Status</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Attempts</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Last Contact</th>
@@ -171,7 +193,16 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                     onClick={() => setSelectedContact(contact)}
                                 >
                                     <td className="w-8 px-4 py-3"><input type="checkbox" onClick={e => e.stopPropagation()} /></td>
-                                    <td className="px-4 py-3 font-bold text-[#111827] text-[12px]">{contact.firstName} {contact.lastName}</td>
+                                    <td className="px-4 py-3 font-bold text-[#111827] text-[12px]">
+                                        {contact.firstName} {contact.lastName}
+                                        {contact.status === LeadStatus.APPOINTMENT_BOOKED ? (
+                                            <span className="ml-2 px-1.5 py-0.5 bg-green-50 text-green-700 text-[9px] font-bold uppercase rounded-sm border border-green-200">Booked</span>
+                                        ) : (contact.totalCalls || 0) === 0 ? (
+                                            <span className="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold uppercase rounded-sm border border-blue-100">Uncontacted</span>
+                                        ) : (
+                                            <span className="ml-2 px-1.5 py-0.5 bg-gray-50 text-gray-500 text-[9px] font-bold uppercase rounded-sm border border-gray-100">Contacted</span>
+                                        )}
+                                    </td>
                                     <td className="px-4 py-3 text-[#6b7280] font-mono text-[11px]">{contact.phoneNumber}</td>
                                     <td className="px-4 py-3 text-[#6b7280] text-[11px] truncate max-w-[200px]">{contact.address}, {contact.city}</td>
                                     <td className="px-4 py-3">

@@ -58,7 +58,6 @@ const App: React.FC = () => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie' },
     { id: 'calls', label: 'Contacts', icon: 'fa-address-book' },
-    { id: 'campaigns', label: 'Campaigns', icon: 'fa-layer-group' },
     { id: 'appointments', label: 'Appointments', icon: 'fa-calendar-check' },
     { id: 'logs', label: 'Call Logs', icon: 'fa-list' },
   ];
@@ -143,11 +142,11 @@ const App: React.FC = () => {
           )}
           {activeTab === 'appointments' && <AppointmentList />}
           {activeTab === 'logs' && <CallLogs />}
-          {['contacts', 'campaigns'].includes(activeTab) && (
+          {activeTab === 'contacts' && (
             <div className="h-full flex flex-col items-center justify-center text-center p-20">
               <i className="fas fa-server text-3xl text-[#d1d5db] mb-4"></i>
               <h3 className="text-sm font-bold text-[#111827] uppercase">Database Connection Active</h3>
-              <p className="text-[11px] text-[#6b7280] mt-1 uppercase tracking-wider">Retrieving operational data for {activeTab}...</p>
+              <p className="text-[11px] text-[#6b7280] mt-1 uppercase tracking-wider">Retrieving operational data for contacts...</p>
             </div>
           )}
         </main>
