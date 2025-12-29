@@ -75,43 +75,44 @@ export const vapiService = {
                                 required: ["datetime"]
                             }
                         },
-                        async: false, // Wait for our response
-                        server: { url: `${publicUrl}/vapi-webhook` } // Use our local tunnel
+                    },
+                    async: false, // Wait for our response
+                    server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` } 
                     }
                 ]
             },
-            voice: {
-                provider: "11labs",
-                voiceId: "burt"
-            },
-            recordingEnabled: true, // Enable Recording
-            serverUrl: `${publicUrl}/vapi-webhook`, // Send end-of-call-report here
-            endCallFunctionEnabled: true // Explicitly enable end-call reports
+voice: {
+    provider: "11labs",
+        voiceId: "burt"
+},
+recordingEnabled: true, // Enable Recording
+    serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`, // Send end-of-call-report here
+        endCallFunctionEnabled: true // Explicitly enable end-call reports
         };
 
-        const payload = {
-            phoneNumberId: phoneNumberId,
-            customer: {
-                number: phoneNumber,
-                name: customerName
-            },
-            assistant: assistantWithTools // Use the config with tools
-        };
+const payload = {
+    phoneNumberId: phoneNumberId,
+    customer: {
+        number: phoneNumber,
+        name: customerName
+    },
+    assistant: assistantWithTools // Use the config with tools
+};
 
-        const response = await fetch(`${VAPI_BASE_URL}/call`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+const response = await fetch(`${VAPI_BASE_URL}/call`, {
+    method: 'POST',
+    headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+});
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || "Failed to initiate call");
-        }
+if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to initiate call");
+}
 
-        return await response.json();
+return await response.json();
     }
 };
