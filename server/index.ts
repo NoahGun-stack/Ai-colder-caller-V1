@@ -138,7 +138,7 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
         try {
             const { data: contacts } = await supabase
                 .from('contacts')
-                .select('id')
+                .select('id, status')
                 .ilike('phoneNumber', `%${last4}%`);
 
             const contact = contacts?.[0]; // Rough match OK for logs
