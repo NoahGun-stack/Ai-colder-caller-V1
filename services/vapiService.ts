@@ -12,7 +12,8 @@ export const vapiService = {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
         const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID;
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
-        const publicUrl = import.meta.env.VITE_PUBLIC_URL;
+
+        console.log("Initiating Vapi Call with Supabase Webhook...");
 
         if (!apiKey) throw new Error("Missing VITE_VAPI_PRIVATE_KEY");
         if (!phoneNumberId) throw new Error("Missing VITE_VAPI_PHONE_NUMBER_ID");
