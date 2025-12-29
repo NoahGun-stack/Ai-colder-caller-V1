@@ -7,6 +7,8 @@ import Dashboard from './components/Dashboard';
 import ContactManagement from './components/ContactManagement';
 import CampaignSettings from './components/CampaignSettings';
 import CallConsole from './components/CallConsole';
+import { AppointmentList } from './components/AppointmentList';
+import { CallLogs } from './components/CallLogs';
 import { contactsService } from './services/contactsService';
 import { Contact } from './types';
 
@@ -139,7 +141,9 @@ const App: React.FC = () => {
               updateContact={updateContactStatus}
             />
           )}
-          {['contacts', 'campaigns', 'appointments', 'logs'].includes(activeTab) && (
+          {activeTab === 'appointments' && <AppointmentList />}
+          {activeTab === 'logs' && <CallLogs />}
+          {['contacts', 'campaigns'].includes(activeTab) && (
             <div className="h-full flex flex-col items-center justify-center text-center p-20">
               <i className="fas fa-server text-3xl text-[#d1d5db] mb-4"></i>
               <h3 className="text-sm font-bold text-[#111827] uppercase">Database Connection Active</h3>

@@ -41,6 +41,7 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ data, onImport, onClos
                                     <tr className="bg-[#f8f9fb]">
                                         <th className="text-left p-2 text-[10px] text-[#6b7280] uppercase">Name</th>
                                         <th className="text-left p-2 text-[10px] text-[#6b7280] uppercase">Phone</th>
+                                        <th className="text-left p-2 text-[10px] text-[#6b7280] uppercase">Address</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -48,6 +49,7 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ data, onImport, onClos
                                         <tr key={i} className="border-t border-[#e5e7eb]">
                                             <td className="p-2 text-[11px] font-bold text-[#111827]">{row.firstName} {row.lastName}</td>
                                             <td className="p-2 text-[11px] text-[#6b7280] font-mono">{row.phoneNumber}</td>
+                                            <td className="p-2 text-[11px] text-[#6b7280]">{row.address}, {row.city}</td>
                                         </tr>
                                     ))}
                                 </tbody>

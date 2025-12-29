@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Contact, LeadStatus } from '../types';
-import { RealtimeService } from '../services/realtimeService';
+// import { RealtimeService } from '../services/realtimeService';
 import { vapiService } from '../services/vapiService';
 
 interface CallConsoleProps {
@@ -21,7 +21,7 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const realtimeRef = useRef<RealtimeService | null>(null);
+  const [callStatus, setCallStatus] = useState<'idle' | 'connecting' | 'ringing' | 'connected' | 'ended'>('idle');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,107 +31,62 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
   }, [logs]);
 
   // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (realtimeRef.current) {
-        realtimeRef.current.disconnect();
-      }
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     // Cleanup if needed
+  //   };
+  // }, []);
 
 
-
-  const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  const vapiParams = {
-    privateKey: import.meta.env.VITE_VAPI_PRIVATE_KEY,
-    phoneNumberId: import.meta.env.VITE_VAPI_PHONE_NUMBER_ID
-  };
+  /* Twilio Integration Update */
+  /* We no longer import API keys client-side. We hit the backend */
 
   const startCall = async () => {
     if (!contact) return;
 
-    // PRIORITY 1: REAL PSTN CALL (VAPI)
-    if (vapiParams.privateKey && vapiParams.phoneNumberId) {
-      setIsCalling(true);
-      setLogs([{
-        role: 'SYSTEM',
-        text: `INITIATING VAPI TELEPHONY NETWORK...`,
-        time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
-      }]);
-
-      try {
-        const result = await vapiService.initiateOutboundCall(contact.phoneNumber, `${contact.firstName} ${contact.lastName}`);
-        setLogs(prev => [...prev, {
-          role: 'SYSTEM',
-          text: `CALL DISPATCHED: ${result.id}`,
-          time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
-        }]);
-        // Note: In a full production app, we would connect a websocket here to Vapi to get live transcripts.
-        // For now, the call happens on the phone network.
-      } catch (err: any) {
-        setLogs(prev => [...prev, {
-          role: 'SYSTEM',
-          text: `VAPI ERROR: ${err.message}`,
-          time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
-        }]);
-        setIsCalling(false);
-      }
-      return;
-    }
-
-    // PRIORITY 2: SIMULATION (OPENAI REALTIME)
-    if (!openAiKey) {
-      alert("Please set VITE_VAPI_PRIVATE_KEY for real calls OR VITE_OPENAI_API_KEY for simulation.");
-      return;
-    }
-
     setIsCalling(true);
     setLogs([{
       role: 'SYSTEM',
-      text: `ESTABLISHING REALTIME CONNECTION...`,
+      text: `CONNECTING TO VAPI SERVICE...`,
       time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
     }]);
 
-    realtimeRef.current = new RealtimeService(openAiKey);
-
-    // Subscribe to updates
-    realtimeRef.current.onUpdate = (role, text) => {
-      setLogs(prev => {
-        // Check if we should append to last log (streaming text) or new log
-        const last = prev[prev.length - 1];
-        if (last && last.role === role && role !== 'SYSTEM') {
-          return [
-            ...prev.slice(0, -1),
-            { ...last, text: last.text + text }
-          ];
-        }
-        return [...prev, {
-          role: role as any,
-          text: text,
-          time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
-        }];
-      });
-    };
-
     try {
-      await realtimeRef.current.connect();
-    } catch (err) {
-      setLogs(prev => [...prev, { role: 'SYSTEM', text: 'ERROR: CONNECTION FAILED.', time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }) }]);
+      // Use Vapi Service for the call
+      await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName);
+
+      setCallStatus('connecting');
+
+      // Vapi handles the call flow, so we don't need to manually handle the stream here
+      // But we can simulate the "Ringing" -> "Connected" state for UI feedback
+      setTimeout(() => setCallStatus('ringing'), 1000);
+      setTimeout(() => setCallStatus('connected'), 3000);
+
+    } catch (err: any) {
+      console.error('Call failed:', err);
+      setCallStatus('ended');
+      setLogs(prev => [...prev, { role: 'SYSTEM', text: `ERROR: ${err.message}`, time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }) }]);
       setIsCalling(false);
     }
   };
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    // Text input disabled for voice mode usually, but could be PTT text injection
-    if (e) e.preventDefault();
-  };
-
   const endCall = async () => {
-    if (realtimeRef.current) {
-      realtimeRef.current.disconnect();
-    }
+    // For Twilio, we can't easily hang up from here without another API call
+    // For now, we just reset the UI state
     setIsCalling(false);
     onClose();
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userInput.trim()) return;
+
+    setLogs(prev => [...prev, {
+      role: 'USER',
+      text: userInput,
+      time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
+    }]);
+    setUserInput('');
   };
 
   if (!contact) return null;

@@ -13,7 +13,12 @@ export const contactsService = {
             throw error;
         }
 
-        return data as Contact[];
+        return (data || []).map((row: any) => ({
+            ...row,
+            totalCalls: row.total_calls || 0,
+            lastContactedAt: row.last_contacted_at,
+            lastOutcome: row.last_outcome
+        })) as Contact[];
     },
 
     async addContact(contact: Omit<Contact, 'id'>) {

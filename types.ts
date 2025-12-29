@@ -22,6 +22,9 @@ export interface Contact {
   source?: string;
   status: LeadStatus;
   lastCallDate?: string;
+  totalCalls?: number;
+  lastContactedAt?: string;
+  lastOutcome?: string;
   tcpaAcknowledged: boolean;
   notes?: string;
 }

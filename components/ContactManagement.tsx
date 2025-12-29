@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Contact, LeadStatus } from '../types';
+import { supabase } from '../services/supabase';
 import { contactsService } from '../services/contactsService';
 import { CsvImporter } from './CsvImporter';
 import { parseCSV } from '../utils/csvParser';
@@ -61,14 +62,16 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
         const [firstName, ...lastNameParts] = name.split(' ');
         const lastName = lastNameParts.join(' ');
 
+        const address = window.prompt("Enter Address (Street, City, State, Zip) or leave blank:");
+        // Simple parsing for prompt - ideal world would be 4 prompts or a modal form
         const newContact: any = {
             firstName: firstName || 'Unknown',
             lastName: lastName || 'Unknown',
             phoneNumber: phone,
-            address: '123 Main St (Placeholder)',
-            city: 'Austin',
+            address: address || 'No Address',
+            city: 'Unknown',
             state: 'TX',
-            zip: '78701',
+            zip: '',
             status: LeadStatus.NOT_CALLED,
             tcpaAcknowledged: true,
             notes: 'Added via Quick Add'
@@ -93,15 +96,20 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
             {/* Left Area: Table List */}
             <div className={`flex-1 flex flex-col min-w-0 transition-all ${selectedContact ? 'border-r border-[#e5e7eb]' : ''}`}>
                 <div className="p-4 border-b border-[#e5e7eb] flex items-center justify-between bg-white">
-                    <div className="relative w-64">
-                        <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] text-[11px]"></i>
-                        <input
-                            type="text"
-                            placeholder="Search contacts..."
-                            className="w-full pl-8 pr-4 py-2 border border-[#e5e7eb] text-[12px] outline-none focus:border-[#4338ca] transition-all"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <div className="flex items-center gap-4">
+                        <div className="relative w-64">
+                            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] text-[11px]"></i>
+                            <input
+                                type="text"
+                                placeholder="Search contacts..."
+                                className="w-full pl-8 pr-4 py-2 border border-[#e5e7eb] text-[12px] outline-none focus:border-[#4338ca] transition-all"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <span className="text-[11px] font-bold text-[#6b7280] uppercase tracking-wider bg-[#f3f4f6] px-2 py-1 rounded-sm">
+                            {contacts.length} Contacts
+                        </span>
                     </div>
                     <div className="flex gap-2">
                         <input
@@ -116,6 +124,21 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             className="px-3 py-2 border border-[#e5e7eb] text-[11px] font-bold uppercase text-[#111827] hover:bg-[#f8f9fb]"
                         >
                             Import CSV
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (!confirm("Scrub all contacts against DNC list? Matching numbers will be marked as 'Do Not Call'.")) return;
+                                const { error } = await supabase.rpc('scrub_dnc_contacts');
+                                if (error) alert('Scrub Error: ' + error.message);
+                                else {
+                                    alert('Scrub Complete. Matching contacts updated.');
+                                    // Refresh contacts
+                                    window.location.reload();
+                                }
+                            }}
+                            className="px-3 py-2 border border-[#e5e7eb] text-[11px] font-bold uppercase text-red-600 hover:bg-red-50"
+                        >
+                            Scrub List
                         </button>
                         <button
                             onClick={handleAddContact}
@@ -133,9 +156,11 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                 <th className="w-8 px-4 text-left"><input type="checkbox" /></th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Name</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Phone Number</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Campaign</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Address</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Address</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Status</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Last Attempt</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Attempts</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Last Contact</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -148,14 +173,17 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                     <td className="w-8 px-4 py-3"><input type="checkbox" onClick={e => e.stopPropagation()} /></td>
                                     <td className="px-4 py-3 font-bold text-[#111827] text-[12px]">{contact.firstName} {contact.lastName}</td>
                                     <td className="px-4 py-3 text-[#6b7280] font-mono text-[11px]">{contact.phoneNumber}</td>
-                                    <td className="px-4 py-3 text-[#6b7280] uppercase text-[10px] font-bold">Standard Outreach</td>
+                                    <td className="px-4 py-3 text-[#6b7280] text-[11px] truncate max-w-[200px]">{contact.address}, {contact.city}</td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase rounded-sm ${contact.status === LeadStatus.APPOINTMENT_BOOKED ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#e5e7eb] text-[#6b7280]'
                                             }`}>
                                             {contact.status}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-[#6b7280] text-[11px]">10 Oct, 14:22</td>
+                                    <td className="px-4 py-3 font-bold text-[#111827] text-[12px] pl-8">{contact.totalCalls || 0}</td>
+                                    <td className="px-4 py-3 text-[#6b7280] text-[11px]">
+                                        {contact.lastContactedAt ? new Date(contact.lastContactedAt).toLocaleDateString() : '-'}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -205,6 +233,22 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                     Initiate Outbound
                                 </button>
                                 <button className="px-4 py-2 border border-[#e5e7eb] text-[#111827] text-[11px] font-bold uppercase hover:bg-[#f8f9fb] rounded-sm">Message</button>
+                                <button
+                                    onClick={async () => {
+                                        if (!confirm(`Are you sure you want to block ${selectedContact.firstName}? They will be added to your DNC list.`)) return;
+
+                                        const { error } = await supabase.from('dnc_list').insert({
+                                            phoneNumber: selectedContact.phoneNumber,
+                                            reason: 'User Manual Block'
+                                        });
+
+                                        if (error) alert('Error blocking number: ' + error.message);
+                                        else alert('Number blocked successfully. Future calls will be prevented.');
+                                    }}
+                                    className="px-4 py-2 border border-red-200 text-red-600 text-[11px] font-bold uppercase hover:bg-red-50 rounded-sm"
+                                >
+                                    Block / DNC
+                                </button>
                             </div>
                         </section>
 
