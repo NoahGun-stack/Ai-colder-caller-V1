@@ -10,7 +10,7 @@ interface ContactManagementProps {
     contacts: Contact[];
     setContacts: React.Dispatch<React.SetStateAction<Contact[]>>;
     onStartCall: (contact: Contact) => void;
-    onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean) => void;
+    onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean, concurrency?: number) => void;
 }
 
 const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setContacts, onStartCall, onStartPowerDial }) => {
@@ -239,9 +239,11 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                     onClick={() => {
                                         const selectedContacts = contacts.filter(c => selectedIds.has(c.id));
                                         if (selectedContacts.length > 1) {
-                                            if (confirm(`Start Batch Dialer for ${selectedContacts.length} selected leads? This will maintain 10 concurrent active calls.`)) {
-                                                onStartPowerDial(selectedContacts, false, true);
-                                            }
+                                            const limitStr = window.prompt("Enter max concurrent calls (default 5 for standard plans):", "5");
+                                            if (limitStr === null) return; // Cancelled
+                                            const limit = parseInt(limitStr) || 5;
+
+                                            onStartPowerDial(selectedContacts, false, true, limit);
                                         } else {
                                             onStartPowerDial(selectedContacts);
                                         }

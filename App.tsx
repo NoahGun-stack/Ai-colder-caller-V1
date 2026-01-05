@@ -60,13 +60,16 @@ const App: React.FC = () => {
     setActiveTab('console');
   };
 
-  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false) => {
+  const [batchConcurrency, setBatchConcurrency] = useState(10);
+
+  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10) => {
     if (contactsToDial.length === 0) return;
     setCallQueue(contactsToDial);
 
     if (batchMode) {
       setIsBatchMode(true);
-      setIsAutoPilot(false); // Batch implies auto, but handled differently
+      setBatchConcurrency(concurrency);
+      setIsAutoPilot(false); // Batch implies auto
     } else {
       setSelectedContactForCall(contactsToDial[0]);
       setIsAutoPilot(autoPilot);
@@ -214,7 +217,7 @@ const App: React.FC = () => {
             isBatchMode ? (
               <BatchMonitor
                 queue={callQueue}
-                concurrency={10}
+                concurrency={batchConcurrency}
                 onClose={() => {
                   setCallQueue([]);
                   setIsBatchMode(false);
