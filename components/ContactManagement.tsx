@@ -10,13 +10,17 @@ interface ContactManagementProps {
     contacts: Contact[];
     setContacts: React.Dispatch<React.SetStateAction<Contact[]>>;
     onStartCall: (contact: Contact) => void;
+    onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean) => void;
 }
 
-const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setContacts, onStartCall }) => {
+const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setContacts, onStartCall, onStartPowerDial }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [callLogs, setCallLogs] = useState<any[]>([]);
     const [showImporter, setShowImporter] = useState(false);
     const [importPreview, setImportPreview] = useState<Partial<Contact>[]>([]);
+    const [selectTopN, setSelectTopN] = useState('');
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +53,39 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
         } catch (error: any) {
             console.error(error);
             alert("Detailed Import Error: " + (error.message || JSON.stringify(error)));
+        }
+    };
+
+    const handleToggleSelect = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(new Set(filteredContacts.map(c => c.id)));
+        } else {
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        if (!confirm(`Are you sure you want to delete ${selectedIds.size} contacts? This cannot be undone.`)) return;
+
+        try {
+            await contactsService.deleteContactsBulk(Array.from(selectedIds));
+            setContacts(prev => prev.filter(c => !selectedIds.has(c.id)));
+            setSelectedIds(new Set());
+            setSelectedContact(null);
+            alert('Contacts deleted successfully.');
+        } catch (error: any) {
+            alert('Error deleting contacts: ' + (error.message || 'Unknown error'));
         }
     };
 
@@ -133,6 +170,54 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         <span className="text-[11px] font-bold text-[#6b7280] uppercase tracking-wider bg-[#f3f4f6] px-2 py-1 rounded-sm">
                             {filteredContacts.length} Visible
                         </span>
+
+                        {/* Bulk Select Input */}
+                        <div className="flex items-center ml-4">
+                            <div className="flex items-center border border-[#e5e7eb] bg-white rounded-sm h-[34px] overflow-hidden group hover:border-[#4338ca] transition-colors">
+                                <span className="bg-[#f9fafb] text-[10px] font-bold text-[#6b7280] uppercase px-2 h-full flex items-center border-r border-[#e5e7eb]">
+                                    Select Top
+                                </span>
+                                <input
+                                    type="text"
+                                    pattern="[0-9]*"
+                                    placeholder="#"
+                                    value={selectTopN}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        if (val === '' || (parseInt(val) > 0 && parseInt(val) <= filteredContacts.length)) {
+                                            setSelectTopN(val);
+                                        }
+                                    }}
+                                    className="w-12 px-2 text-[11px] font-bold text-center outline-none h-full text-[#111827] placeholder-gray-300"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && selectTopN) {
+                                            const val = parseInt(selectTopN);
+                                            if (val > 0) {
+                                                const toSelect = filteredContacts.slice(0, val).map(c => c.id);
+                                                setSelectedIds(new Set(toSelect));
+                                                setSelectTopN('');
+                                                (e.target as HTMLInputElement).blur();
+                                            }
+                                        }
+                                    }}
+                                />
+                                {selectTopN && (
+                                    <button
+                                        onClick={() => {
+                                            const val = parseInt(selectTopN);
+                                            if (val > 0) {
+                                                const toSelect = filteredContacts.slice(0, val).map(c => c.id);
+                                                setSelectedIds(new Set(toSelect));
+                                                setSelectTopN('');
+                                            }
+                                        }}
+                                        className="h-full px-2 text-indigo-600 hover:bg-indigo-50 border-l border-[#e5e7eb]"
+                                    >
+                                        <i className="fas fa-check text-[10px]"></i>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                     <div className="flex gap-2">
                         <input
@@ -148,21 +233,34 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         >
                             Import CSV
                         </button>
-                        <button
-                            onClick={async () => {
-                                if (!confirm("Scrub all contacts against DNC list? Matching numbers will be marked as 'Do Not Call'.")) return;
-                                const { error } = await supabase.rpc('scrub_dnc_contacts');
-                                if (error) alert('Scrub Error: ' + error.message);
-                                else {
-                                    alert('Scrub Complete. Matching contacts updated.');
-                                    // Refresh contacts
-                                    window.location.reload();
-                                }
-                            }}
-                            className="px-3 py-2 border border-[#e5e7eb] text-[11px] font-bold uppercase text-red-600 hover:bg-red-50"
-                        >
-                            Scrub List
-                        </button>
+                        {selectedIds.size > 0 && (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        const selectedContacts = contacts.filter(c => selectedIds.has(c.id));
+                                        if (selectedContacts.length > 1) {
+                                            if (confirm(`Start Batch Dialer for ${selectedContacts.length} selected leads? This will maintain 10 concurrent active calls.`)) {
+                                                onStartPowerDial(selectedContacts, false, true);
+                                            }
+                                        } else {
+                                            onStartPowerDial(selectedContacts);
+                                        }
+                                    }}
+                                    className="px-3 py-2 bg-indigo-600 text-white text-[11px] font-bold uppercase hover:bg-indigo-700 shadow-sm border border-transparent animate-pulse"
+                                >
+                                    <i className="fas fa-play mr-2 text-[10px]"></i>
+                                    {selectedIds.size > 1 ? `Batch Dial (${selectedIds.size})` : 'Power Dial'}
+                                </button>
+
+                                <button
+                                    onClick={handleBulkDelete}
+                                    className="px-3 py-2 border border-red-200 text-red-600 bg-red-50 text-[11px] font-bold uppercase hover:bg-red-100"
+                                >
+                                    Delete ({selectedIds.size})
+                                </button>
+                            </>
+                        )}
+
                         <button
                             onClick={handleAddContact}
                             className="px-3 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase hover:bg-[#3730a3] transition-colors"
@@ -176,7 +274,18 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                     <table className="w-full table-dense">
                         <thead>
                             <tr className="bg-[#f8f9fb]">
-                                <th className="w-8 px-4 text-left"><input type="checkbox" /></th>
+                                <th className="w-8 px-4 text-left">
+                                    <input
+                                        type="checkbox"
+                                        checked={filteredContacts.length > 0 && selectedIds.size === filteredContacts.length}
+                                        ref={input => {
+                                            if (input) {
+                                                input.indeterminate = selectedIds.size > 0 && selectedIds.size < filteredContacts.length;
+                                            }
+                                        }}
+                                        onChange={handleSelectAll}
+                                    />
+                                </th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Name</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Phone Number</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Location</th>
@@ -189,11 +298,23 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             {filteredContacts.map((contact) => (
                                 <tr
                                     key={contact.id}
-                                    className={`cursor-pointer hover:bg-[#f8f9fb] transition-colors border-b border-[#f3f4f6] ${selectedContact?.id === contact.id ? 'bg-[#f5f7ff]' : ''}`}
-                                    onClick={() => setSelectedContact(contact)}
+                                    className={`hover:bg-[#f8f9fb] transition-colors border-b border-[#f3f4f6] ${selectedContact?.id === contact.id ? 'bg-[#f5f7ff]' : ''}`}
                                 >
-                                    <td className="w-8 px-4 py-3"><input type="checkbox" onClick={e => e.stopPropagation()} /></td>
-                                    <td className="px-4 py-3 font-bold text-[#111827] text-[12px]">
+                                    <td className="w-8 px-4 py-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(contact.id)}
+                                            onClick={e => e.stopPropagation()}
+                                            onChange={() => handleToggleSelect(contact.id)}
+                                        />
+                                    </td>
+                                    <td
+                                        className="px-4 py-3 font-bold text-[#111827] text-[12px] cursor-pointer hover:text-indigo-600 transition-colors"
+                                        onClick={() => {
+                                            setSelectedContact(contact);
+                                            contactsService.getCallLogs(contact.id).then(setCallLogs);
+                                        }}
+                                    >
                                         {contact.firstName} {contact.lastName}
                                         {contact.status === LeadStatus.APPOINTMENT_BOOKED ? (
                                             <span className="ml-2 px-1.5 py-0.5 bg-green-50 text-green-700 text-[9px] font-bold uppercase rounded-sm border border-green-200">Booked</span>
@@ -229,100 +350,102 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                 </div>
             </div>
 
-            {showImporter && (
-                <CsvImporter
-                    data={importPreview}
-                    onImport={handleBulkImport}
-                    onClose={() => setShowImporter(false)}
-                />
-            )}
+            {
+                showImporter && (
+                    <CsvImporter
+                        data={importPreview}
+                        onImport={handleBulkImport}
+                        onClose={() => setShowImporter(false)}
+                    />
+                )
+            }
 
             {/* Right Area: Context Detail Panel (Persistent) */}
-            {selectedContact && (
-                <div className="w-[380px] shrink-0 flex flex-col bg-white overflow-hidden shadow-2xl border-l border-[#e5e7eb]">
-                    <div className="p-5 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9fb]">
-                        <h3 className="text-sm font-bold text-[#111827] uppercase tracking-wide">Contact Context</h3>
-                        <button onClick={() => setSelectedContact(null)} className="text-[#6b7280] hover:text-[#111827]"><i className="fas fa-times"></i></button>
-                    </div>
+            {
+                selectedContact && (
+                    <div className="w-[380px] shrink-0 flex flex-col bg-white overflow-hidden shadow-2xl border-l border-[#e5e7eb]">
+                        <div className="p-5 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9fb]">
+                            <h3 className="text-sm font-bold text-[#111827] uppercase tracking-wide">Contact Context</h3>
+                            <button onClick={() => setSelectedContact(null)} className="text-[#6b7280] hover:text-[#111827]"><i className="fas fa-times"></i></button>
+                        </div>
 
-                    <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                        <section>
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="w-12 h-12 bg-[#f5f7ff] border border-[#e0e7ff] text-[#4338ca] flex items-center justify-center font-bold text-lg rounded-full">
-                                    {selectedContact.firstName[0]}{selectedContact.lastName[0]}
-                                </div>
-                                <div>
-                                    <h4 className="text-base font-bold text-[#111827]">{selectedContact.firstName} {selectedContact.lastName}</h4>
-                                    <p className="text-xs text-[#6b7280] font-bold uppercase tracking-wider">{selectedContact.phoneNumber}</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => onStartCall(selectedContact)}
-                                    className="flex-1 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-[#3730a3] transition-colors rounded-sm"
-                                >
-                                    Initiate Outbound
-                                </button>
-                                <button className="px-4 py-2 border border-[#e5e7eb] text-[#111827] text-[11px] font-bold uppercase hover:bg-[#f8f9fb] rounded-sm">Message</button>
-                                <button
-                                    onClick={async () => {
-                                        if (!confirm(`Are you sure you want to block ${selectedContact.firstName}? They will be added to your DNC list.`)) return;
-
-                                        const { error } = await supabase.from('dnc_list').insert({
-                                            phoneNumber: selectedContact.phoneNumber,
-                                            reason: 'User Manual Block'
-                                        });
-
-                                        if (error) alert('Error blocking number: ' + error.message);
-                                        else alert('Number blocked successfully. Future calls will be prevented.');
-                                    }}
-                                    className="px-4 py-2 border border-red-200 text-red-600 text-[11px] font-bold uppercase hover:bg-red-50 rounded-sm"
-                                >
-                                    Block / DNC
-                                </button>
-                            </div>
-                        </section>
-
-                        <section className="space-y-4">
-                            <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Operational Data</h5>
-                            <div className="grid grid-cols-2 gap-y-4 text-[11px]">
-                                <div>
-                                    <p className="text-[#6b7280] mb-1">Status</p>
-                                    <p className="font-bold text-[#111827] uppercase">{selectedContact.status}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[#6b7280] mb-1">Source</p>
-                                    <p className="font-bold text-[#111827] uppercase">CSV Import</p>
-                                </div>
-                                <div className="col-span-2">
-                                    <p className="text-[#6b7280] mb-1">Primary Location</p>
-                                    <p className="font-bold text-[#111827] uppercase">{selectedContact.address}</p>
-                                    <p className="text-[#6b7280] text-[10px]">{selectedContact.city}, {selectedContact.state}</p>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section className="space-y-4">
-                            <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Call Ledger</h5>
-                            <div className="space-y-3">
-                                {[
-                                    { date: '12 Oct', time: '14:20', type: 'Outbound', status: 'Connected' },
-                                    { date: '11 Oct', time: '10:15', type: 'Outbound', status: 'No-Answer' },
-                                ].map((log, i) => (
-                                    <div key={i} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#f8f9fb] rounded-sm">
-                                        <div>
-                                            <p className="text-[11px] font-bold text-[#111827]">{log.type} Call</p>
-                                            <p className="text-[10px] text-[#6b7280]">{log.date} at {log.time}</p>
-                                        </div>
-                                        <span className="text-[10px] font-bold text-[#6b7280] uppercase">{log.status}</span>
+                        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                            <section>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-12 h-12 bg-[#f5f7ff] border border-[#e0e7ff] text-[#4338ca] flex items-center justify-center font-bold text-lg rounded-full">
+                                        {selectedContact.firstName[0]}{selectedContact.lastName[0]}
                                     </div>
-                                ))}
-                            </div>
-                        </section>
+                                    <div>
+                                        <h4 className="text-base font-bold text-[#111827]">{selectedContact.firstName} {selectedContact.lastName}</h4>
+                                        <p className="text-xs text-[#6b7280] font-bold uppercase tracking-wider">{selectedContact.phoneNumber}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => onStartCall(selectedContact)}
+                                        className="flex-1 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-[#3730a3] transition-colors rounded-sm"
+                                    >
+                                        Initiate Outbound
+                                    </button>
+
+
+
+                                </div>
+                            </section>
+
+                            <section className="space-y-4">
+                                <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Operational Data</h5>
+                                <div className="grid grid-cols-2 gap-y-4 text-[11px]">
+                                    <div>
+                                        <p className="text-[#6b7280] mb-1">Status</p>
+                                        <p className="font-bold text-[#111827] uppercase">{selectedContact.status}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[#6b7280] mb-1">Source</p>
+                                        <p className="font-bold text-[#111827] uppercase">CSV Import</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="text-[#6b7280] mb-1">Primary Location</p>
+                                        <p className="font-bold text-[#111827] uppercase">{selectedContact.address}</p>
+                                        <p className="text-[#6b7280] text-[10px]">{selectedContact.city}, {selectedContact.state}</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="space-y-4">
+                                <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Call Ledger</h5>
+                                <div className="space-y-3">
+                                    {callLogs.length === 0 ? (
+                                        <p className="text-[11px] text-[#6b7280] italic py-2">No call history available.</p>
+                                    ) : (
+                                        callLogs.map((log) => (
+                                            <div key={log.id} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#f8f9fb] rounded-sm">
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-[#111827]">
+                                                        {log.outcome === 'Connected' ? 'Connected Call' : 'Outbound Attempt'}
+                                                    </p>
+                                                    <p className="text-[10px] text-[#6b7280]">
+                                                        {new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className={`block text-[10px] font-bold uppercase ${log.outcome === 'Connected' ? 'text-green-600' : 'text-[#6b7280]'}`}>
+                                                        {log.outcome || 'Unknown'}
+                                                    </span>
+                                                    {log.duration > 0 && (
+                                                        <span className="text-[9px] text-[#9ca3af] font-mono">{Math.floor(log.duration / 60)}m {log.duration % 60}s</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </section>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

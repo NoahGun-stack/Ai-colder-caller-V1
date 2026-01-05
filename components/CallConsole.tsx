@@ -8,6 +8,10 @@ interface CallConsoleProps {
   contact: Contact | null;
   onClose: () => void;
   updateContact: (id: string, updates: Partial<Contact>) => void;
+  onNext?: () => void;
+  hasNext?: boolean;
+  isAutoPilot?: boolean;
+  onToggleAutoPilot?: () => void;
 }
 
 interface LogEntry {
@@ -16,7 +20,7 @@ interface LogEntry {
   time: string;
 }
 
-const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateContact }) => {
+const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateContact, onNext, hasNext, isAutoPilot = false, onToggleAutoPilot }) => {
   const [isCalling, setIsCalling] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [userInput, setUserInput] = useState('');
@@ -29,6 +33,28 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs]);
+
+  // Auto-Pilot Timer Logic
+  const [autoPilotTimer, setAutoPilotTimer] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (callStatus === 'ended' && isAutoPilot && hasNext && onNext) {
+      let timeLeft = 5;
+      setAutoPilotTimer(timeLeft);
+      const timer = setInterval(() => {
+        timeLeft -= 1;
+        setAutoPilotTimer(timeLeft);
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          onNext(); // Auto-advance
+          setAutoPilotTimer(null);
+        }
+      }, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setAutoPilotTimer(null);
+    }
+  }, [callStatus, isAutoPilot, hasNext, onNext]);
 
   // Clean up on unmount
   // useEffect(() => {
@@ -53,7 +79,8 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
 
     try {
       // Use Vapi Service for the call
-      await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName);
+      const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
+      await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress);
 
       setCallStatus('connecting');
 
@@ -109,8 +136,30 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
               {isSummarizing ? 'Processing...' : 'End Session'}
             </button>
           )}
+          {hasNext && !isCalling && (
+            <button
+              onClick={onNext}
+              className="bg-green-600 text-white px-6 py-2 text-[11px] font-bold uppercase hover:bg-green-700 transition-colors animate-pulse"
+            >
+              Next Lead <i className="fas fa-arrow-right ml-2"></i>
+            </button>
+          )}
+          {onToggleAutoPilot && (
+            <button
+              onClick={onToggleAutoPilot}
+              className={`px-4 py-2 text-[10px] font-bold uppercase border ${isAutoPilot ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-gray-200 text-gray-500'}`}
+            >
+              {isAutoPilot ? 'Stop Auto-Pilot' : 'Enable Auto-Pilot'}
+            </button>
+          )}
         </div>
       </header>
+
+      {autoPilotTimer !== null && (
+        <div className="bg-indigo-600 text-white text-center py-2 text-xs font-bold uppercase tracking-wide animate-pulse">
+          Auto-advancing to next lead in {autoPilotTimer}s...
+        </div>
+      )}
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 min-h-0 overflow-hidden">
         <div className="lg:col-span-3 flex flex-col min-h-0 overflow-hidden">

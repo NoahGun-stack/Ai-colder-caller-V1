@@ -34,15 +34,14 @@ export const contactsService = {
                     user_id: user.id
                 }
             ])
-            .select()
-            .single();
+            .select();
 
         if (error) {
             console.error('Error adding contact:', error);
             throw error;
         }
 
-        return data as Contact;
+        return (data && data.length > 0) ? data[0] as Contact : {} as Contact;
     },
 
     async addContactsBulk(contacts: Omit<Contact, 'id'>[]) {
@@ -72,14 +71,73 @@ export const contactsService = {
             .from('contacts')
             .update(updates)
             .eq('id', id)
-            .select()
-            .single();
+            .select();
 
         if (error) {
             console.error('Error updating contact:', error);
             throw error;
         }
 
-        return data as Contact;
+        return (data && data.length > 0) ? data[0] as Contact : null;
+    },
+    async deleteContact(id: string) {
+        // First delete related call logs
+        const { error: logsError } = await supabase
+            .from('call_logs')
+            .delete()
+            .eq('contact_id', id);
+
+        if (logsError) {
+            console.error('Error deleting related call logs:', logsError);
+            throw logsError;
+        }
+
+        const { error } = await supabase
+            .from('contacts')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting contact:', error);
+            throw error;
+        }
+    },
+
+    async deleteContactsBulk(ids: string[]) {
+        // First delete related call logs
+        const { error: logsError } = await supabase
+            .from('call_logs')
+            .delete()
+            .in('contact_id', ids);
+
+        if (logsError) {
+            console.error('Error deleting related call logs bulk:', logsError);
+            throw logsError;
+        }
+
+        const { error } = await supabase
+            .from('contacts')
+            .delete()
+            .in('id', ids);
+
+        if (error) {
+            console.error('Error deleting contacts bulk:', error);
+            throw error;
+        }
+    },
+
+    async getCallLogs(contactId: string) {
+        const { data, error } = await supabase
+            .from('call_logs')
+            .select('*')
+            .eq('contact_id', contactId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching call logs:', error);
+            throw error;
+        }
+
+        return data || [];
     }
 };

@@ -11,6 +11,7 @@ create table contacts (
   zip text,
   status text default 'Not Called',
   "tcpaAcknowledged" boolean default false,
+  total_calls integer default 0,
   notes text
 );
 

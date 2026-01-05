@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import ContactManagement from './components/ContactManagement';
 import CampaignSettings from './components/CampaignSettings';
 import CallConsole from './components/CallConsole';
+import { BatchMonitor } from './components/BatchMonitor';
 import { AppointmentList } from './components/AppointmentList';
 import { CallLogs } from './components/CallLogs';
 import { contactsService } from './services/contactsService';
@@ -19,6 +20,10 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('calls');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContactForCall, setSelectedContactForCall] = useState<Contact | null>(null);
+  const [callQueue, setCallQueue] = useState<Contact[]>([]);
+  const [isAutoPilot, setIsAutoPilot] = useState(false);
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -28,7 +33,10 @@ const App: React.FC = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecoveryMode(true);
+      }
       setSession(session);
       if (session) loadContacts();
       else setContacts([]);
@@ -48,7 +56,36 @@ const App: React.FC = () => {
 
   const handleStartCall = (contact: Contact) => {
     setSelectedContactForCall(contact);
+    setCallQueue([]); // Clear queue for single call
     setActiveTab('console');
+  };
+
+  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false) => {
+    if (contactsToDial.length === 0) return;
+    setCallQueue(contactsToDial);
+
+    if (batchMode) {
+      setIsBatchMode(true);
+      setIsAutoPilot(false); // Batch implies auto, but handled differently
+    } else {
+      setSelectedContactForCall(contactsToDial[0]);
+      setIsAutoPilot(autoPilot);
+      setIsBatchMode(false);
+    }
+    setActiveTab('console');
+  };
+
+  const handleNextCall = () => {
+    // Current contact is callQueue[0]
+    const nextQueue = callQueue.slice(1);
+    setCallQueue(nextQueue);
+
+    if (nextQueue.length > 0) {
+      setSelectedContactForCall(nextQueue[0]);
+    } else {
+      setSelectedContactForCall(null);
+      setActiveTab('calls'); // Return to list when done
+    }
   };
 
   const updateContactStatus = (id: string, updates: Partial<Contact>) => {
@@ -62,8 +99,41 @@ const App: React.FC = () => {
     { id: 'logs', label: 'Call Logs', icon: 'fa-list' },
   ];
 
-  if (!session) {
+  if (!session && !passwordRecoveryMode) {
     return <Auth />;
+  }
+
+  if (passwordRecoveryMode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8f9fb]">
+        <div className="w-full max-w-md bg-white p-8 border border-[#e5e7eb] shadow-sm">
+          <div className="mb-6 text-center">
+            <h1 className="text-xl font-bold uppercase tracking-tight text-[#111827]">RoofPulse</h1>
+            <p className="text-sm text-[#6b7280] mt-2">Update your password</p>
+          </div>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement).value;
+              const { error } = await supabase.auth.updateUser({ password });
+              if (!error) {
+                setPasswordRecoveryMode(false);
+                alert('Password updated successfully!');
+              } else {
+                alert('Error updating password: ' + error.message);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="block text-xs font-medium text-[#374151] mb-1">New Password</label>
+              <input type="password" name="password" required className="w-full border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#4338ca] outline-none" placeholder="••••••••" />
+            </div>
+            <button type="submit" className="w-full bg-[#4338ca] hover:bg-[#3730a3] text-white font-medium py-2.5 text-sm">Update Password</button>
+          </form>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -131,14 +201,44 @@ const App: React.FC = () => {
 
         <main className="flex-1 overflow-hidden relative">
           {activeTab === 'dashboard' && <Dashboard contacts={contacts} />}
-          {activeTab === 'calls' && <ContactManagement contacts={contacts} setContacts={setContacts} onStartCall={handleStartCall} />}
+          {activeTab === 'calls' && (
+            <ContactManagement
+              contacts={contacts}
+              setContacts={setContacts}
+              onStartCall={handleStartCall}
+              onStartPowerDial={handleStartPowerDial}
+            />
+          )}
           {activeTab === 'settings' && <CampaignSettings />}
           {activeTab === 'console' && (
-            <CallConsole
-              contact={selectedContactForCall}
-              onClose={() => setSelectedContactForCall(null)}
-              updateContact={updateContactStatus}
-            />
+            isBatchMode ? (
+              <BatchMonitor
+                queue={callQueue}
+                concurrency={10}
+                onClose={() => {
+                  setCallQueue([]);
+                  setIsBatchMode(false);
+                  setActiveTab('calls');
+                }}
+                onComplete={() => {
+                  // alert('Batch Complete');
+                }}
+              />
+            ) : (
+              <CallConsole
+                contact={selectedContactForCall}
+                onClose={() => {
+                  setSelectedContactForCall(null);
+                  setCallQueue([]);
+                  setActiveTab('calls');
+                }}
+                updateContact={updateContactStatus}
+                onNext={handleNextCall}
+                hasNext={callQueue.length > 1}
+                isAutoPilot={isAutoPilot}
+                onToggleAutoPilot={() => setIsAutoPilot(!isAutoPilot)}
+              />
+            )
           )}
           {activeTab === 'appointments' && <AppointmentList />}
           {activeTab === 'logs' && <CallLogs />}

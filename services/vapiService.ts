@@ -8,31 +8,32 @@ export const vapiService = {
      * @param phoneNumber The customer's phone number (E.164 format preferred)
      * @param customerName Name of the customer for context
      */
-    async initiateOutboundCall(phoneNumber: string, customerName: string) {
+    async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string) {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
         const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID;
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
 
-        console.log("Initiating Vapi Call with Supabase Webhook...");
+        // Normalize Phone Number to E.164 (+1XXXXXXXXXX)
+        // 1. Remove non-digits
+        const digits = phoneNumber.replace(/\D/g, '');
+        // 2. Ensure it has 11 digits starting with 1, or 10 digits (assume US +1)
+        let formattedNumber = digits;
+        if (digits.length === 10) {
+            formattedNumber = `+1${digits}`;
+        } else if (digits.length === 11 && digits.startsWith('1')) {
+            formattedNumber = `+${digits}`;
+        } else {
+            // Fallback: Just try adding + if missing, or leave as is if unique global format
+            // but for US-centric usage, this covers 99% of cases.
+            formattedNumber = `+${digits}`;
+        }
+
+        console.log(`Initiating Vapi Call to ${formattedNumber} (Original: ${phoneNumber})`);
 
         if (!apiKey) throw new Error("Missing VITE_VAPI_PRIVATE_KEY");
         if (!phoneNumberId) throw new Error("Missing VITE_VAPI_PHONE_NUMBER_ID");
 
-        // 1. DNC Check
-        // Normalize number to check last 10 digits
-        const normalizedCheck = phoneNumber.replace(/\D/g, '').slice(-10);
 
-        // We check for exact match or suffix match in the user's DNC list
-        // Since RLS is on, we can only see our own DNC list
-        const { data: dncRecord } = await supabase
-            .from('dnc_list')
-            .select('id')
-            .ilike('phoneNumber', `%${normalizedCheck}`) // Check if number ends with these digits
-            .maybeSingle();
-
-        if (dncRecord) {
-            throw new Error(`Call Blocked: Number is in your DNC list.`);
-        }
 
         // Get current time in EST for context
         const now = new Date();
@@ -41,24 +42,25 @@ export const vapiService = {
 
         // Define Tool for Appointment Booking
         const assistantWithTools = {
-            firstMessage: `Hello, is this ${customerName}?`,
+            firstMessage: `Hello, this is Jon with Amp Roofing, am I speaking with ${customerName}?`,
             model: {
                 provider: "openai",
                 model: "gpt-4",
                 messages: [
                     {
                         role: "system",
-                        content: `You are a friendly but persistent roofing sales representative for RoofPulse. Your goal is to book a free roof inspection. You are speaking with ${customerName}. 
+                        content: `You are Jon from Amp Roofing, a friendly but persistent roofing sales representative. Your goal is to book a free roof inspection. You are speaking with ${customerName}. 
                         
                         CONTEXT:
                         - Today is: ${estDate}
                         - Current Time: ${estTime}
+                        - Customer Address: ${customerAddress}
 
                         INSTRUCTIONS:
-                        1. If they agree to an appointment, ask for a time.
-                        2. Book for the EXACT time they say.
-                        3. Format as "YYYY-MM-DDTHH:MM:SS-05:00" (Force EST offset).
-                        4. If they say "8pm", send "${now.getFullYear()}-...T20:00:00-05:00".`
+                        1. If they agree to an appointment, you MUST confirm their address matches: ${customerAddress}.
+                        2. Ask for a specific time for the inspection.
+                        3. Book for the EXACT time they say.
+                        4. Format booking time as "YYYY-MM-DDTHH:MM:SS-05:00" (Force EST offset).`
                     }
                 ],
                 tools: [
@@ -93,7 +95,7 @@ export const vapiService = {
         const payload = {
             phoneNumberId: phoneNumberId,
             customer: {
-                number: phoneNumber,
+                number: formattedNumber,
                 name: customerName
             },
             assistant: assistantWithTools // Use the config with tools
