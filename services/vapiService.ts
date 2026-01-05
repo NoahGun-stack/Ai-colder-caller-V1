@@ -10,7 +10,7 @@ export const vapiService = {
      */
     async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string) {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
-        const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID_ACTIVE;
+        const phoneNumberId = 'bb2b2136-cc88-46c8-9fdc-c09780331308'; // Hardcoded to fix env issue
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
 
         console.log("DEBUG: config", { phoneNumberId, apiKey: apiKey ? 'Set' : 'Missing' });
@@ -33,7 +33,7 @@ export const vapiService = {
         console.log(`Initiating Vapi Call to ${formattedNumber} (Original: ${phoneNumber})`);
 
         if (!apiKey) throw new Error("Missing VITE_VAPI_PRIVATE_KEY");
-        if (!phoneNumberId) throw new Error("Missing VITE_VAPI_PHONE_NUMBER_ID");
+        if (!phoneNumberId) throw new Error(`CRITICAL: Phone ID Missing in Hardcoded File! (v=${phoneNumberId})`);
 
 
 
