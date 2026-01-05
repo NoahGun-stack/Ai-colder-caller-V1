@@ -111,7 +111,7 @@ const App: React.FC = () => {
       <div className="flex min-h-screen items-center justify-center bg-[#f8f9fb]">
         <div className="w-full max-w-md bg-white p-8 border border-[#e5e7eb] shadow-sm">
           <div className="mb-6 text-center">
-            <h1 className="text-xl font-bold uppercase tracking-tight text-[#111827]">RoofPulse</h1>
+            <img src="/neuroline_logo.png" alt="NeuroLine" className="h-8 mx-auto mb-2" />
             <p className="text-sm text-[#6b7280] mt-2">Update your password</p>
           </div>
           <form
@@ -144,7 +144,7 @@ const App: React.FC = () => {
       {/* Navigation Sidebar */}
       <aside className="w-[200px] bg-[#f8f9fb] border-r border-[#e5e7eb] flex flex-col shrink-0">
         <div className="h-14 flex items-center px-5 border-b border-[#e5e7eb]">
-          <h1 className="text-sm font-bold tracking-tight uppercase text-[#111827]">RoofPulse</h1>
+          <img src="/neuroline_logo.png" alt="NeuroLine" className="h-6" />
         </div>
 
         <nav className="flex-1 py-4 overflow-y-auto">
@@ -169,8 +169,8 @@ const App: React.FC = () => {
             Settings
           </button>
           <div className="flex items-center gap-2 p-2 bg-white border border-[#e5e7eb]">
-            <div className="w-6 h-6 bg-[#4338ca] text-white flex items-center justify-center font-bold text-[9px]">AX</div>
-            <span className="text-[11px] font-bold text-[#111827] truncate">Apex Roofing</span>
+            <div className="w-6 h-6 bg-[#4338ca] text-white flex items-center justify-center font-bold text-[9px]">AR</div>
+            <span className="text-[11px] font-bold text-[#111827] truncate">Amp Roofing</span>
           </div>
           <button
             onClick={() => supabase.auth.signOut()}
@@ -187,18 +187,11 @@ const App: React.FC = () => {
         <header className="h-14 bg-white border-b border-[#e5e7eb] flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-4">
             <h2 className="text-sm font-bold text-[#111827] uppercase tracking-wide">
-              {activeTab === 'calls' ? 'Prospect Outreach' : activeTab.replace('-', ' ')}
+              {activeTab === 'appointments' ? null : (activeTab === 'calls' ? 'Prospect Outreach' : activeTab.replace('-', ' '))}
             </h2>
           </div>
           <div className="flex items-center gap-6">
-            <span className="text-[11px] font-bold text-green-600 flex items-center gap-1.5 uppercase">
-              <span className="w-1.5 h-1.5 bg-green-600 rounded-full"></span> Active
-            </span>
-            <div className="flex items-center gap-3 text-[#6b7280]">
-              <i className="fas fa-search text-xs cursor-pointer"></i>
-              <i className="fas fa-bell text-xs cursor-pointer"></i>
-              <i className="fas fa-user-circle text-sm cursor-pointer"></i>
-            </div>
+            {/* Header actions removed as per user request */}
           </div>
         </header>
 

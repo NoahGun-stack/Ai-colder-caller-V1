@@ -138,10 +138,14 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
         try {
             const { data: contacts } = await supabase
                 .from('contacts')
-                .select('id, status')
+                .select('id, status, phoneNumber')
                 .ilike('phoneNumber', `%${last4}%`);
 
-            const contact = contacts?.[0]; // Rough match OK for logs
+            // STRICT MATCH: Filter to ensure we get the exact phone number
+            const contact = contacts?.find(c => {
+                const dbPhone = (c.phoneNumber || '').replace(/\D/g, '').slice(-10);
+                return dbPhone === normalizedPhone;
+            });
 
             if (contact) {
                 await supabase.from('call_logs').insert({
@@ -150,7 +154,8 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
                     outcome: call.endedReason || 'Completed',
                     recording_url: recordingUrl,
                     transcript: message.transcript || message.summary || 'No transcript available',
-                    sentiment: message.analysis?.sentiment || 'Neutral'
+                    sentiment: message.analysis?.sentiment || 'Neutral',
+                    cost: message.cost || 0
                 });
                 console.log('Call Log Saved with Recording:', recordingUrl);
 

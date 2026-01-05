@@ -45,7 +45,7 @@ const Auth: React.FC = () => {
         <div className="flex min-h-screen items-center justify-center bg-[#f8f9fb]">
             <div className="w-full max-w-md bg-white p-8 border border-[#e5e7eb] shadow-sm">
                 <div className="mb-6 text-center">
-                    <h1 className="text-xl font-bold uppercase tracking-tight text-[#111827]">RoofPulse</h1>
+                    <img src="/neuroline_logo.png" alt="NeuroLine" className="h-8 mx-auto mb-2" />
                     <p className="text-sm text-[#6b7280] mt-2">
                         {view === 'sign_up' ? 'Create your account' :
                             view === 'forgot_password' ? 'Reset your password' :

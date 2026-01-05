@@ -5,6 +5,7 @@ import { supabase } from '../services/supabase';
 import { contactsService } from '../services/contactsService';
 import { CsvImporter } from './CsvImporter';
 import { parseCSV } from '../utils/csvParser';
+import { Modal } from './Modal';
 
 interface ContactManagementProps {
     contacts: Contact[];
@@ -22,6 +23,15 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
     const [importPreview, setImportPreview] = useState<Partial<Contact>[]>([]);
     const [selectTopN, setSelectTopN] = useState('');
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Modal States
+    const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
+    const [addContactForm, setAddContactForm] = useState({ firstName: '', lastName: '', phoneNumber: '', address: '' });
+
+    const [isPowerDialModalOpen, setIsPowerDialModalOpen] = useState(false);
+    const [powerDialConfig, setPowerDialConfig] = useState<{ contacts: Contact[], limit: number }>({ contacts: [], limit: 5 });
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -76,36 +86,37 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
 
     const handleBulkDelete = async () => {
         if (selectedIds.size === 0) return;
-        if (!confirm(`Are you sure you want to delete ${selectedIds.size} contacts? This cannot be undone.`)) return;
+        setIsDeleteModalOpen(true);
+    };
 
+    const executeBulkDelete = async () => {
         try {
             await contactsService.deleteContactsBulk(Array.from(selectedIds));
             setContacts(prev => prev.filter(c => !selectedIds.has(c.id)));
             setSelectedIds(new Set());
             setSelectedContact(null);
-            alert('Contacts deleted successfully.');
+            setIsDeleteModalOpen(false);
         } catch (error: any) {
             alert('Error deleting contacts: ' + (error.message || 'Unknown error'));
         }
     };
 
-    const handleAddContact = async () => {
-        const name = window.prompt("Enter contact name (First Last):");
-        if (!name) return;
+    const handleAddContact = () => {
+        setAddContactForm({ firstName: '', lastName: '', phoneNumber: '', address: '' });
+        setIsAddContactModalOpen(true);
+    };
 
-        const phone = window.prompt("Enter phone number:");
-        if (!phone) return;
+    const submitAddContact = async () => {
+        if (!addContactForm.firstName || !addContactForm.phoneNumber) {
+            alert("Name and Phone are required.");
+            return;
+        }
 
-        const [firstName, ...lastNameParts] = name.split(' ');
-        const lastName = lastNameParts.join(' ');
-
-        const address = window.prompt("Enter Address (Street, City, State, Zip) or leave blank:");
-        // Simple parsing for prompt - ideal world would be 4 prompts or a modal form
         const newContact: any = {
-            firstName: firstName || 'Unknown',
-            lastName: lastName || 'Unknown',
-            phoneNumber: phone,
-            address: address || 'No Address',
+            firstName: addContactForm.firstName,
+            lastName: addContactForm.lastName || '',
+            phoneNumber: addContactForm.phoneNumber,
+            address: addContactForm.address || 'No Address',
             city: 'Unknown',
             state: 'TX',
             zip: '',
@@ -117,8 +128,19 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
         try {
             const created = await contactsService.addContact(newContact);
             setContacts(prev => [created, ...prev]);
+            setIsAddContactModalOpen(false);
         } catch (error) {
             alert("Failed to add contact. Check console.");
+        }
+    };
+
+    const initiatePowerDial = () => {
+        const selectedContacts = contacts.filter(c => selectedIds.has(c.id));
+        if (selectedContacts.length > 1) {
+            setPowerDialConfig({ contacts: selectedContacts, limit: 5 });
+            setIsPowerDialModalOpen(true);
+        } else {
+            onStartPowerDial(selectedContacts);
         }
     };
 
@@ -236,18 +258,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         {selectedIds.size > 0 && (
                             <>
                                 <button
-                                    onClick={() => {
-                                        const selectedContacts = contacts.filter(c => selectedIds.has(c.id));
-                                        if (selectedContacts.length > 1) {
-                                            const limitStr = window.prompt("Enter max concurrent calls (default 5 for standard plans):", "5");
-                                            if (limitStr === null) return; // Cancelled
-                                            const limit = parseInt(limitStr) || 5;
-
-                                            onStartPowerDial(selectedContacts, false, true, limit);
-                                        } else {
-                                            onStartPowerDial(selectedContacts);
-                                        }
-                                    }}
+                                    onClick={initiatePowerDial}
                                     className="px-3 py-2 bg-indigo-600 text-white text-[11px] font-bold uppercase hover:bg-indigo-700 shadow-sm border border-transparent animate-pulse"
                                 >
                                     <i className="fas fa-play mr-2 text-[10px]"></i>
@@ -447,6 +458,122 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                     </div>
                 )
             }
+            {/* Add Contact Modal */}
+            <Modal
+                isOpen={isAddContactModalOpen}
+                onClose={() => setIsAddContactModalOpen(false)}
+                title="Add New Contact"
+                footer={(
+                    <button
+                        onClick={submitAddContact}
+                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded hover:bg-indigo-700"
+                    >
+                        Save Contact
+                    </button>
+                )}
+            >
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">First Name</label>
+                            <input
+                                type="text"
+                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                                value={addContactForm.firstName}
+                                onChange={e => setAddContactForm({ ...addContactForm, firstName: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Last Name</label>
+                            <input
+                                type="text"
+                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                                value={addContactForm.lastName}
+                                onChange={e => setAddContactForm({ ...addContactForm, lastName: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Phone Number</label>
+                        <input
+                            type="tel"
+                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                            value={addContactForm.phoneNumber}
+                            onChange={e => setAddContactForm({ ...addContactForm, phoneNumber: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Address</label>
+                        <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                            value={addContactForm.address}
+                            onChange={e => setAddContactForm({ ...addContactForm, address: e.target.value })}
+                        />
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Power Dial Modal */}
+            <Modal
+                isOpen={isPowerDialModalOpen}
+                onClose={() => setIsPowerDialModalOpen(false)}
+                title="Start Power Dial Session"
+                size="sm"
+                footer={(
+                    <button
+                        onClick={() => {
+                            onStartPowerDial?.(powerDialConfig.contacts, false, true, powerDialConfig.limit);
+                            setIsPowerDialModalOpen(false);
+                        }}
+                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded hover:bg-indigo-700 w-full"
+                    >
+                        Start Dialing
+                    </button>
+                )}
+            >
+                <p className="text-sm text-gray-600 mb-4">
+                    You are about to start a parallel dialing session for <strong className="text-gray-900">{powerDialConfig.contacts.length} contacts</strong>.
+                </p>
+                <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Max Concurrent Calls</label>
+                    <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                        value={powerDialConfig.limit}
+                        onChange={e => setPowerDialConfig({ ...powerDialConfig, limit: parseInt(e.target.value) || 1 })}
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1">Recommended: 3-5 for best results.</p>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Delete Contacts"
+                size="sm"
+                footer={(
+                    <button
+                        onClick={executeBulkDelete}
+                        className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded hover:bg-red-700 w-full"
+                    >
+                        Yes, Delete {selectedIds.size} Contacts
+                    </button>
+                )}
+            >
+                <div className="text-center py-4">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <i className="fas fa-trash-alt text-red-600 text-lg"></i>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                        Are you sure you want to delete <strong className="text-gray-900">{selectedIds.size} contacts</strong>?
+                        This action cannot be undone.
+                    </p>
+                </div>
+            </Modal>
         </div >
     );
 };

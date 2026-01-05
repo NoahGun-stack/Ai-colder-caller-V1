@@ -59,10 +59,10 @@ export const vapiService = {
                         - Customer Address: ${customerAddress}
 
                         INSTRUCTIONS:
-                        1. If they agree to an appointment, you MUST confirm their address matches: ${customerAddress}.
+                        1. If they agree to an appointment, confirm their address matches: ${customerAddress}.
                         2. Ask for a specific time for the inspection.
-                        3. Book for the EXACT time they say.
-                        4. Format booking time as "YYYY-MM-DDTHH:MM:SS-05:00" (Force EST offset).`
+                        3. Once they provide a time, IMMEDIATELY call the "book_appointment" tool. Do NOT ask for a "final confirmation" or "is this correct?" - just book it and say "I have you down for...".
+                        4. Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00" (Force CST offset).`
                     }
                 ],
                 tools: [
@@ -91,7 +91,13 @@ export const vapiService = {
             },
             recordingEnabled: true, // Enable Recording
             serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`, // Send end-of-call-report here
-            endCallFunctionEnabled: true // Explicitly enable end-call reports
+            endCallFunctionEnabled: true, // Explicitly enable end-call reports
+            voicemailDetection: {
+                provider: "twilio",
+                voicemailDetectionTypes: ["machine_start", "machine_end_beep", "machine_end_other"],
+                enabled: true,
+                voicemailMessage: "" // Empty message triggers immediate hangup on detection
+            }
         };
 
         const payload = {

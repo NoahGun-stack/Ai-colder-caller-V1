@@ -3,36 +3,41 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-const supabase = createClient(process.env.VITE_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+const supabaseUrl = process.env.VITE_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function main() {
-    console.log("--- Investigation: Who is 5868? ---");
+async function checkContact() {
+    console.log("--- Checking Contact Data ---");
 
-    // 1. Search by Phone Number (Last 4 digits from the call)
+    const targetPhone = '5122998550';
+    console.log(`Searching for phone: ${targetPhone}`);
+
+    // 1. Search by Phone
     const { data: byPhone } = await supabase
         .from('contacts')
         .select('*')
-        .ilike('phoneNumber', '%5868%');
+        .ilike('phoneNumber', `%${targetPhone}%`);
 
-    console.log("Contacts passing phone check (5868):");
-    console.table(byPhone?.map(c => ({
-        id: c.id,
-        name: `${c.firstName} ${c.lastName}`,
-        phone: c.phoneNumber
-    })));
+    console.log("Found by Phone:", byPhone);
 
-    // 2. Search by Name (Kody / Cody)
+    // 2. Search by Name "Young Seo"
     const { data: byName } = await supabase
         .from('contacts')
         .select('*')
-        .or('firstName.ilike.%Kody%,firstName.ilike.%Cody%');
+        .ilike('firstName', 'Young')
+        .ilike('lastName', 'Seo');
 
-    console.log("\nContacts named Kody or Cody:");
-    console.table(byName?.map(c => ({
-        id: c.id,
-        name: `${c.firstName} ${c.lastName}`,
-        phone: c.phoneNumber
-    })));
+    console.log("Found by Name 'Young Seo':", byName);
+
+    // 3. Check the appointment
+    const { data: appt } = await supabase
+        .from('appointments')
+        .select('*, contact:contacts(*)')
+        .ilike('notes', '%Manually recovered%')
+        .limit(1);
+
+    console.log("Current Manually Recovered Appointment:", appt);
 }
 
-main();
+checkContact();

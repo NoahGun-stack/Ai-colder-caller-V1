@@ -21,10 +21,12 @@ export const CallLogs: React.FC = () => {
     const [logs, setLogs] = useState<CallLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'attempted'>('all');
 
     useEffect(() => {
         fetchLogs();
-    }, []);
+    }, [searchQuery, statusFilter]);
 
     const fetchLogs = async () => {
         try {
@@ -48,7 +50,35 @@ export const CallLogs: React.FC = () => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setLogs(data as any || []);
+
+            let filteredLogs = data as any || [];
+
+            // Apply Filters (Client-side)
+            if (searchQuery.trim() || statusFilter !== 'all') {
+                const lowerQuery = searchQuery.toLowerCase();
+
+                filteredLogs = filteredLogs.filter((log: any) => {
+                    // Search Logic
+                    const firstName = log.contact?.firstName?.toLowerCase() || '';
+                    const lastName = log.contact?.lastName?.toLowerCase() || '';
+                    const phone = log.contact?.phoneNumber || '';
+                    const fullName = `${firstName} ${lastName}`;
+                    const matchesSearch = !searchQuery.trim() || fullName.includes(lowerQuery) || phone.includes(lowerQuery);
+
+                    if (!matchesSearch) return false;
+
+                    // Status Logic
+                    const outcome = (log.outcome || '').toLowerCase();
+                    const isCompleted = (log.duration > 0) || outcome.includes('completed') || outcome.includes('connected');
+
+                    if (statusFilter === 'completed') return isCompleted;
+                    if (statusFilter === 'attempted') return !isCompleted;
+
+                    return true;
+                });
+            }
+
+            setLogs(filteredLogs);
         } catch (err) {
             console.error('Error fetching call logs:', err);
         } finally {
@@ -62,31 +92,68 @@ export const CallLogs: React.FC = () => {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Loading call history...</div>;
-
     return (
         <div className="flex flex-col h-full bg-[#f8f9fb]">
-            <header className="p-6 border-b border-[#e5e7eb] bg-white flex justify-between items-center shadow-sm">
+            <header className="p-6 border-b border-[#e5e7eb] bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
                 <div>
                     <h2 className="text-xl font-bold text-[#111827]">Call Ledger</h2>
                     <p className="text-sm text-[#6b7280]">Review recordings and AI analysis</p>
                 </div>
-                <button
-                    onClick={fetchLogs}
-                    className="px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"
-                >
-                    <i className="fas fa-sync-alt mr-2"></i> Refresh
-                </button>
+
+                <div className="flex flex-1 w-full sm:w-auto sm:justify-end gap-3">
+                    {/* Search Bar */}
+                    <div className="relative flex-1 sm:max-w-xs">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i className="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search name or phone..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                        />
+                    </div>
+
+                    {/* Status Filter */}
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value as any)}
+                        className="block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    >
+                        <option value="all">All Outcomes</option>
+                        <option value="completed">Completed (Connected)</option>
+                        <option value="attempted">Attempted (No Answer)</option>
+                    </select>
+
+                    <button
+                        onClick={fetchLogs}
+                        className="p-2 text-gray-400 hover:text-gray-500"
+                        title="Refresh"
+                    >
+                        <i className="fas fa-sync-alt"></i>
+                    </button>
+                </div>
             </header>
 
             <div className="flex-1 overflow-auto p-6">
-                {logs.length === 0 ? (
+                {loading ? (
+                    <div className="p-8 text-center text-gray-500">Loading call history...</div>
+                ) : logs.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="mx-auto h-12 w-12 text-gray-400">
-                            <i className="fas fa-microphone-slash text-4xl"></i>
+                            <i className="fas fa-search-minus text-4xl"></i>
                         </div>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No calls recorded yet</h3>
-                        <p className="mt-1 text-sm text-gray-500">Make some calls to populate the ledger.</p>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No calls found</h3>
+                        <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
+                        {(searchQuery || statusFilter !== 'all') && (
+                            <button
+                                onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
+                                className="mt-3 text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                            >
+                                Clear filters
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="bg-white shadow overflow-hidden sm:rounded-md border border-gray-200">
@@ -97,7 +164,7 @@ export const CallLogs: React.FC = () => {
                                         <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}>
                                             <div className="flex items-center gap-4">
                                                 <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg text-white ${log.sentiment === 'Positive' ? 'bg-green-500' :
-                                                        log.sentiment === 'Negative' ? 'bg-red-500' : 'bg-gray-400'
+                                                    log.sentiment === 'Negative' ? 'bg-red-500' : 'bg-gray-400'
                                                     }`}>
                                                     {log.contact ? log.contact.firstName[0] : '?'}
                                                 </div>
@@ -110,7 +177,10 @@ export const CallLogs: React.FC = () => {
                                                         <span>•</span>
                                                         <span>{formatDuration(log.duration)}</span>
                                                         <span>•</span>
-                                                        <span className="uppercase font-bold tracking-wider">{log.outcome}</span>
+                                                        <span className={`uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${log.outcome === 'Completed' || (log.duration || 0) > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                                            }`}>
+                                                            {log.outcome || (log.duration > 0 ? 'Connected' : 'Attempted')}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

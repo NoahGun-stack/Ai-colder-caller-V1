@@ -1,45 +1,52 @@
 
-import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-
+import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.VITE_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+async function recoverAppointment() {
+    console.log("--- Recovering Missing Appointment ---");
 
-async function main() {
-    // Hardcoded details from the transcript I just read
-    const TARGET_PHONE_LAST_4 = '5868'; // From previous log output confirmation
-    const APPT_TIME = '2026-01-03T17:00:00-06:00'; // "Next Saturday" (Jan 3) at 5 PM local
-    // Note: Assuming "next Saturday" relative to Dec 27 is Jan 3rd.
-
-    console.log("Recovering Appointment for Next Saturday (Jan 3) at 5 PM...");
-
-    // 1. Find Contact
-    const { data: contacts } = await supabase
+    // 1. Find Contact "Nicole Schilling"
+    const { data: contacts, error: contactError } = await supabase
         .from('contacts')
-        .select('id, firstName, lastName')
-        .ilike('phoneNumber', `%${TARGET_PHONE_LAST_4}%`);
+        .select('*')
+        .ilike('firstName', 'Nicole%')
+        .ilike('lastName', 'Schilling%')
+        .limit(1);
 
-    const contact = contacts?.[0];
-    if (!contact) {
-        console.error("Could not find contact.");
+    if (contactError || !contacts || contacts.length === 0) {
+        console.error("Contact 'Nicole Schilling' not found!");
         return;
     }
 
-    console.log(`Booking for: ${contact.firstName} ${contact.lastName}`);
+    const contact = contacts[0];
+    console.log(`Found Contact: ${contact.firstName} ${contact.lastName} (${contact.id})`);
 
     // 2. Insert Appointment
-    const { error } = await supabase.from('appointments').insert({
-        contact_id: contact.id,
-        datetime: APPT_TIME,
-        notes: "Recovered from Vapi Transcript: User requested 5 PM on Saturday."
-    });
+    // Date: Wednesday, Jan 7th 2026, 9:00 AM
+    // ISO: 2026-01-07T09:00:00
+    const appointmentTime = '2026-01-07T09:00:00-05:00'; // EST
 
-    if (error) console.error("Error:", error);
-    else console.log("Success: Appointment Recovered!");
+    const { data, error } = await supabase
+        .from('appointments')
+        .insert({
+            contact_id: contact.id,
+            datetime: appointmentTime,
+            status: 'scheduled',
+            notes: 'Manually recovered from Vapi transcript. Address: 1707 Cliffside Dr.'
+        })
+        .select();
+
+    if (error) {
+        console.error("Failed to insert appointment:", error);
+    } else {
+        console.log("SUCCESS: Appointment recovered!");
+        console.log(data);
+    }
 }
 
-main();
+recoverAppointment();
