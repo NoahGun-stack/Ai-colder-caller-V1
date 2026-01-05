@@ -10,8 +10,10 @@ export const vapiService = {
      */
     async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string) {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
-        const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID;
+        const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID_ACTIVE;
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
+
+        console.log("DEBUG: config", { phoneNumberId, apiKey: apiKey ? 'Set' : 'Missing' });
 
         // Normalize Phone Number to E.164 (+1XXXXXXXXXX)
         // 1. Remove non-digits
