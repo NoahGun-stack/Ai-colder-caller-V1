@@ -59,10 +59,13 @@ export const vapiService = {
                         - Customer Address: ${customerAddress}
 
                         INSTRUCTIONS:
-                        1. If they agree to an appointment, confirm their address matches: ${customerAddress}.
-                        2. Ask for a specific time for the inspection.
-                        3. Once they provide a time, IMMEDIATELY call the "book_appointment" tool. Do NOT ask for a "final confirmation" or "is this correct?" - just book it and say "I have you down for...".
-                        4. Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00" (Force CST offset).`
+                        1. Once they answer/confirm who they are, IMMEDIATELY say: "I'm with Amp Roofing and we're offering free roof inspections in your neighborhood."
+                        2. Do NOT ask if they are the homeowner. Proceed to determine interest.
+                        3. Ask for a specific time for the inspection.
+                        4. Once they provide a time, IMMEDIATELY call the "book_appointment" tool.
+                        5. AFTER booking, say "Great, I have you down for [Time]. Just to confirm, our technician is heading to [Street Number] [Street Name] in [Zip Code], correct?"
+                        6. If they say the address is wrong, ask for the correct address. Then use the "update_address" tool to fix it.
+                        7. Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00" (Force CST offset).`
                     }
                 ],
                 tools: [
@@ -82,6 +85,22 @@ export const vapiService = {
                         },
                         async: false,
                         server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
+                    },
+                    {
+                        type: "function",
+                        function: {
+                            name: "update_address",
+                            description: "Updates the customer's property address if incorrect.",
+                            parameters: {
+                                type: "object",
+                                properties: {
+                                    new_address: { type: "string", description: "The full corrected address provided by the user." }
+                                },
+                                required: ["new_address"]
+                            }
+                        },
+                        async: false,
+                        server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
                     }
                 ]
             },
@@ -95,8 +114,7 @@ export const vapiService = {
             voicemailDetection: {
                 provider: "twilio",
                 voicemailDetectionTypes: ["machine_start", "machine_end_beep", "machine_end_other"],
-                enabled: true,
-                voicemailMessage: "" // Empty message triggers immediate hangup on detection
+                enabled: true
             }
         };
 

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './services/supabase';
 import Auth from './components/Auth';
+import { Modal } from './components/Modal';
 import Dashboard from './components/Dashboard';
 import ContactManagement from './components/ContactManagement';
 import CampaignSettings from './components/CampaignSettings';
@@ -13,22 +14,31 @@ import { CallLogs } from './components/CallLogs';
 import { contactsService } from './services/contactsService';
 import { Contact } from './types';
 
+import { LandingPage } from './components/LandingPage';
+
 type Tab = 'dashboard' | 'calls' | 'contacts' | 'campaigns' | 'appointments' | 'logs' | 'settings' | 'console';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
+  const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('calls');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContactForCall, setSelectedContactForCall] = useState<Contact | null>(null);
   const [callQueue, setCallQueue] = useState<Contact[]>([]);
   const [isAutoPilot, setIsAutoPilot] = useState(false);
   const [isBatchMode, setIsBatchMode] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pinInput, setPinInput] = useState('');
   const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(false);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) loadContacts();
+      if (session) {
+        setShowLanding(false); // If session exists, skip landing
+        loadContacts();
+      }
     });
 
     const {
@@ -36,10 +46,20 @@ const App: React.FC = () => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setPasswordRecoveryMode(true);
+        setShowLanding(false);
       }
       setSession(session);
-      if (session) loadContacts();
-      else setContacts([]);
+      if (session) {
+        setShowLanding(false);
+        loadContacts();
+      } else {
+        setContacts([]);
+        // Don't force showLanding = true here on logout, 
+        // because user might want to see login screen if they just logged out? 
+        // Actually for now let's default to Landing on explicit logout or no session
+        // But if we toggle to Auth, we don't want auth state change to reset it?
+        // Let's keep it simple: if session is null, we rely on showLanding state.
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -103,7 +123,22 @@ const App: React.FC = () => {
   ];
 
   if (!session && !passwordRecoveryMode) {
-    return <Auth />;
+    if (showLanding) {
+      return <LandingPage onSignIn={() => setShowLanding(false)} />;
+    }
+    return (
+      <>
+        <div className="fixed top-4 left-4 z-50">
+          <button
+            onClick={() => setShowLanding(true)}
+            className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium text-sm bg-white/80 px-4 py-2 rounded-full border border-gray-200"
+          >
+            <i className="fas fa-arrow-left"></i> Back to Home
+          </button>
+        </div>
+        <Auth />
+      </>
+    );
   }
 
   if (passwordRecoveryMode) {
@@ -162,7 +197,10 @@ const App: React.FC = () => {
 
         <div className="p-4 border-t border-[#e5e7eb]">
           <button
-            onClick={() => setActiveTab('settings')}
+            onClick={() => {
+              setPinInput(''); // Clear previous input
+              setIsPinModalOpen(true);
+            }}
             className={`w-full flex items-center gap-3 px-2 py-2 text-[12px] font-medium mb-4 ${activeTab === 'settings' ? 'text-[#4338ca]' : 'text-[#6b7280]'}`}
           >
             <i className="fas fa-cog w-4 text-center opacity-70"></i>
@@ -247,6 +285,57 @@ const App: React.FC = () => {
           )}
         </main>
       </div>
+      <Modal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        title="Enter Admin PIN"
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setIsPinModalOpen(false)}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (pinInput === 'boobs1234') {
+                  setActiveTab('settings');
+                  setIsPinModalOpen(false);
+                } else {
+                  alert('Incorrect PIN');
+                }
+              }}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Unlock
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">Please enter the admin PIN to access settings.</p>
+          <input
+            type="password"
+            value={pinInput}
+            onChange={(e) => setPinInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (pinInput === 'boobs1234') {
+                  setActiveTab('settings');
+                  setIsPinModalOpen(false);
+                } else {
+                  alert('Incorrect PIN');
+                }
+              }
+            }}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+            placeholder="Enter PIN"
+            autoFocus
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

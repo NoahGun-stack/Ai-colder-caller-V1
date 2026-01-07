@@ -38,7 +38,7 @@ serve(async (req) => {
 
                 const last4 = normalizedPhone.slice(-4);
 
-                // 1. Find Contact (using simple select to avoid RPC dependency if possible)
+                // 1. Find Contact
                 const { data: contacts, error: findError } = await supabase
                     .from('contacts')
                     .select('id, phoneNumber, address, city, state, zip')
@@ -88,6 +88,61 @@ serve(async (req) => {
                     results: [{
                         toolCallId: toolCall.id,
                         result: "Appointment booked successfully."
+                    }]
+                }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            if (toolCall.function.name === 'update_address') {
+                let args = toolCall.function.arguments;
+                if (typeof args === 'string') {
+                    try { args = JSON.parse(args); } catch (e) { console.error(e); }
+                }
+
+                const call = message.call;
+                const rawPhoneNumber = call.customer.number;
+                const normalizedPhone = rawPhoneNumber.replace(/\D/g, '').slice(-10);
+                console.log(`Updating address for ${normalizedPhone}`, args);
+
+                const last4 = normalizedPhone.slice(-4);
+
+                const { data: contacts, error: findError } = await supabase
+                    .from('contacts')
+                    .select('id, phoneNumber')
+                    .ilike('phoneNumber', `%${last4}%`);
+
+                if (findError) throw findError;
+
+                const contact = contacts?.find((c: any) => {
+                    return (c.phoneNumber || '').replace(/\D/g, '').slice(-10) === normalizedPhone;
+                });
+
+                if (!contact) {
+                    return new Response(JSON.stringify({
+                        results: [{
+                            toolCallId: toolCall.id,
+                            result: "Error: Contact not found."
+                        }]
+                    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+                }
+
+                const { error: updateError } = await supabase
+                    .from('contacts')
+                    .update({ address: args.new_address })
+                    .eq('id', contact.id);
+
+                if (updateError) {
+                    return new Response(JSON.stringify({
+                        results: [{
+                            toolCallId: toolCall.id,
+                            result: `Error: ${updateError.message}`
+                        }]
+                    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+                }
+
+                return new Response(JSON.stringify({
+                    results: [{
+                        toolCallId: toolCall.id,
+                        result: `Address updated to ${args.new_address}. Proceed.`
                     }]
                 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             }

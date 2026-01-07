@@ -32,6 +32,7 @@ fastify.get('/', async () => {
 });
 
 // VAPI WEBHOOK (Tool Execution)
+// VAPI WEBHOOK (Tool Execution)
 fastify.post('/vapi-webhook', async (request: any, reply) => {
     console.log('Vapi Webhook Triggered:', request.body);
     const { message } = request.body;
@@ -52,16 +53,13 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
             }
             const call = message.call;
             const rawPhoneNumber = call.customer.number;
-
-            // Normalize phone: remove all non-digits, take last 10 digits
-            // specific for US numbers to match (617) vs +1 617
             const normalizedPhone = rawPhoneNumber.replace(/\D/g, '').slice(-10);
 
             console.log(`Booking for Raw: ${rawPhoneNumber}, Normalized: ${normalizedPhone}`, args);
 
             try {
                 const last4 = normalizedPhone.slice(-4);
-                // 1. Find Contact
+                // 1. Find Contact (Strict match)
                 const { data: candidates, error: findError } = await supabase
                     .from('contacts')
                     .select('id, phoneNumber, address, city, state, zip')
@@ -69,7 +67,6 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
 
                 if (findError) throw findError;
 
-                // Filter in JS
                 const contact = candidates?.find(c => {
                     const dbPhone = (c.phoneNumber || '').replace(/\D/g, '').slice(-10);
                     return dbPhone === normalizedPhone;
@@ -123,6 +120,73 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
                 return reply.code(500).send({ error: err.message });
             }
         }
+
+        if (toolCall.function.name === 'update_address') {
+            let args = toolCall.function.arguments;
+            if (typeof args === 'string') {
+                try {
+                    args = JSON.parse(args);
+                } catch (e) {
+                    console.error('Error parsing arguments JSON:', e);
+                }
+            }
+            const call = message.call;
+            const rawPhoneNumber = call.customer.number;
+            const normalizedPhone = rawPhoneNumber.replace(/\D/g, '').slice(-10);
+
+            console.log(`Updating Address for: ${normalizedPhone}`, args);
+
+            try {
+                const last4 = normalizedPhone.slice(-4);
+                // 1. Find Contact
+                const { data: candidates, error: findError } = await supabase
+                    .from('contacts')
+                    .select('id, phoneNumber')
+                    .ilike('phoneNumber', `%${last4}%`);
+
+                if (findError) throw findError;
+
+                const contact = candidates?.find(c => {
+                    const dbPhone = (c.phoneNumber || '').replace(/\D/g, '').slice(-10);
+                    return dbPhone === normalizedPhone;
+                });
+
+                if (!contact) {
+                    return reply.send({
+                        results: [{
+                            toolCallId: toolCall.id,
+                            result: "Error: Contact not found. Cannot update address."
+                        }]
+                    });
+                }
+
+                // 2. Update Address
+                const { error: updateError } = await supabase
+                    .from('contacts')
+                    .update({ address: args.new_address })
+                    .eq('id', contact.id);
+
+                if (updateError) {
+                    return reply.send({
+                        results: [{
+                            toolCallId: toolCall.id,
+                            result: `Error updating address: ${updateError.message}`
+                        }]
+                    });
+                }
+
+                return reply.send({
+                    results: [{
+                        toolCallId: toolCall.id,
+                        result: `Address updated to ${args.new_address}. Proceed with confirmation.`
+                    }]
+                });
+
+            } catch (err: any) {
+                console.error(err);
+                return reply.code(500).send({ error: err.message });
+            }
+        }
     }
 
     // Handle End of Call Report (Recording)
@@ -141,7 +205,7 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
                 .select('id, status, phoneNumber')
                 .ilike('phoneNumber', `%${last4}%`);
 
-            // STRICT MATCH: Filter to ensure we get the exact phone number
+            // STRICT MATCH
             const contact = contacts?.find(c => {
                 const dbPhone = (c.phoneNumber || '').replace(/\D/g, '').slice(-10);
                 return dbPhone === normalizedPhone;
@@ -160,7 +224,6 @@ fastify.post('/vapi-webhook', async (request: any, reply) => {
                 console.log('Call Log Saved with Recording:', recordingUrl);
 
                 // Update Status if not already booked
-                // If duration > 0, it's a "Connect", otherwise just "Attempted" unless already connected
                 const newStatus = (call.duration || 0) > 0 ? 'Connected' : 'Attempted';
 
                 await supabase.rpc('update_contact_status_if_needed', {
