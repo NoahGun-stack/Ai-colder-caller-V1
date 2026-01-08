@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Contact } from '../types';
 import { supabase } from '../services/supabase';
+import { contactsService } from '../services/contactsService';
+
+import { Modal } from './Modal';
 
 interface DashboardProps {
   contacts: Contact[];
@@ -18,6 +21,10 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -89,7 +96,8 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
         return {
           ref: c ? `${c.firstName} ${c.lastName}` : 'Unknown',
           status: l.outcome,
-          time: new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          time: new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          id: l.id
         };
       }) || [];
       setRecentActivity(recent);
@@ -173,10 +181,24 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
                   <tr key={idx} className="hover:bg-[#f8f9fb] transition-colors">
                     <td className="px-4 py-3 font-bold text-[#111827] text-sm">{act.ref}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase ${act.status === 'Completed' ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#e5e7eb] text-[#6b7280]'
-                        }`}>
-                        {act.status}
-                      </span>
+                      <div className="flex items-center justify-end gap-3">
+                        <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase ${act.status === 'Completed' ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#e5e7eb] text-[#6b7280]'
+                          }`}>
+                          {act.status}
+                        </span>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            e.stopPropagation();
+                            setLogToDelete(act.id);
+                            setIsDeleteModalOpen(true);
+                          }}
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-all"
+                          title="Delete Log"
+                        >
+                          <i className="fas fa-trash-alt text-xs"></i>
+                        </button>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right text-xs text-gray-400">{act.time}</td>
                   </tr>
@@ -188,7 +210,52 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
           </div>
         </div>
       </div>
-    </div>
+
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setLogToDelete(null);
+        }}
+        title="Delete Call Log"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setLogToDelete(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                if (!logToDelete) return;
+                try {
+                  await contactsService.deleteCallLog(logToDelete);
+                  setRecentActivity(prev => prev.filter(r => r.id !== logToDelete));
+                  fetchDashboardData();
+                  setIsDeleteModalOpen(false);
+                  setLogToDelete(null);
+                } catch (err) {
+                  // Optional: replace alert with toast in future
+                  alert('Failed to delete log');
+                }
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+            >
+              Delete Log
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-500">
+          Are you sure you want to delete this call log? This action cannot be undone.
+        </p>
+      </Modal>
+    </div >
   );
 };
 

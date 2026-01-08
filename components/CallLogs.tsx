@@ -1,6 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
+import { contactsService } from '../services/contactsService';
+
+import { Modal } from './Modal';
 
 interface CallLog {
     id: string;
@@ -23,6 +26,10 @@ export const CallLogs: React.FC = () => {
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'attempted'>('all');
+
+    // Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [logToDelete, setLogToDelete] = useState<string | null>(null);
 
     useEffect(() => {
         fetchLogs();
@@ -126,6 +133,8 @@ export const CallLogs: React.FC = () => {
                         <option value="attempted">Attempted (No Answer)</option>
                     </select>
 
+
+
                     <button
                         onClick={fetchLogs}
                         className="p-2 text-gray-400 hover:text-gray-500"
@@ -191,6 +200,17 @@ export const CallLogs: React.FC = () => {
                                                     </div>
                                                 )}
                                                 <i className={`fas fa-chevron-down text-gray-400 transition-transform ${expandedId === log.id ? 'rotate-180' : ''}`}></i>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setLogToDelete(log.id);
+                                                        setIsDeleteModalOpen(true);
+                                                    }}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all ml-2"
+                                                    title="Delete Log"
+                                                >
+                                                    <i className="fas fa-trash-alt"></i>
+                                                </button>
                                             </div>
                                         </div>
 
@@ -207,6 +227,49 @@ export const CallLogs: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
+
+
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setLogToDelete(null);
+                }}
+                title="Delete Call Log"
+                footer={
+                    <>
+                        <button
+                            onClick={() => {
+                                setIsDeleteModalOpen(false);
+                                setLogToDelete(null);
+                            }}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (!logToDelete) return;
+                                try {
+                                    await contactsService.deleteCallLog(logToDelete);
+                                    setLogs(prev => prev.filter(l => l.id !== logToDelete));
+                                    setIsDeleteModalOpen(false);
+                                    setLogToDelete(null);
+                                } catch (err) {
+                                    alert('Failed to delete log');
+                                }
+                            }}
+                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                        >
+                            Delete Log
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-sm text-gray-500">
+                    Are you sure you want to delete this call log? This action cannot be undone.
+                </p>
+            </Modal>
+        </div >
     );
 };

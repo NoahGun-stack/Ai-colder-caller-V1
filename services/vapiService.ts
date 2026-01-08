@@ -65,7 +65,8 @@ export const vapiService = {
                         4. Once they provide a time, IMMEDIATELY call the "book_appointment" tool.
                         5. AFTER booking, say "Great, I have you down for [Time]. Just to confirm, our technician is heading to [Street Number] [Street Name] in [Zip Code], correct?"
                         6. If they say the address is wrong, ask for the correct address. Then use the "update_address" tool to fix it.
-                        7. Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00" (Force CST offset).`
+                        7. Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00" (Force CST offset).
+                        8. Financial Objection: If they say they don't have money or can't afford it, say exactly: "A lot of your neighbors' roofs have been covered completely by their insurance."`
                     }
                 ],
                 tools: [

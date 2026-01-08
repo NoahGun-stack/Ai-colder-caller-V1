@@ -111,7 +111,8 @@ export const AppointmentList: React.FC = () => {
                             created_at,
                             duration,
                             outcome,
-                            recording_url
+                            recording_url,
+                            transcript
                         )
                     )
                 `)
@@ -310,7 +311,7 @@ export const AppointmentList: React.FC = () => {
                                                                             className="flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                                                                         >
                                                                             <i className={`fas fa-caret-${visibleCalls.has(apt.id) ? 'down' : 'right'}`}></i>
-                                                                            View Booking Call
+                                                                            View Call
                                                                         </button>
                                                                         {visibleCalls.has(apt.id) && (
                                                                             <div className="mt-2 space-y-1.5 animate-fadeIn">
@@ -324,15 +325,26 @@ export const AppointmentList: React.FC = () => {
                                                                                     })
                                                                                     .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                                                                                     .map((log: any) => (
-                                                                                        <div key={log.id} className="flex items-center gap-2 bg-gray-50 p-1.5 rounded border border-gray-200">
-                                                                                            <div className="text-[9px] font-bold text-gray-400 w-8 text-center leading-tight">
-                                                                                                {new Date(log.created_at).toLocaleString('default', { month: 'short' }).toUpperCase()}<br />
-                                                                                                {new Date(log.created_at).getDate()}
+                                                                                        <div key={log.id} className="flex flex-col gap-2">
+                                                                                            <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded border border-gray-200">
+                                                                                                <div className="text-[9px] font-bold text-gray-400 w-8 text-center leading-tight">
+                                                                                                    {new Date(log.created_at).toLocaleString('default', { month: 'short' }).toUpperCase()}<br />
+                                                                                                    {new Date(log.created_at).getDate()}
+                                                                                                </div>
+                                                                                                <audio controls src={log.recording_url} className="h-6 w-full max-w-[200px]" />
+                                                                                                <span className="text-[10px] text-gray-500 font-mono ml-auto mr-1">
+                                                                                                    {Math.floor(log.duration / 60)}:{(log.duration % 60).toString().padStart(2, '0')}
+                                                                                                </span>
                                                                                             </div>
-                                                                                            <audio controls src={log.recording_url} className="h-6 w-full max-w-[200px]" />
-                                                                                            <span className="text-[10px] text-gray-500 font-mono ml-auto mr-1">
-                                                                                                {Math.floor(log.duration / 60)}:{(log.duration % 60).toString().padStart(2, '0')}
-                                                                                            </span>
+                                                                                            {log.transcript && (
+                                                                                                <div className="p-4 bg-white border border-gray-200 rounded-md text-sm text-gray-800 leading-relaxed whitespace-pre-wrap shadow-sm font-sans animate-fadeIn">
+                                                                                                    <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-1">
+                                                                                                        <i className="fas fa-align-left text-gray-400 text-xs"></i>
+                                                                                                        <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Transcript</h5>
+                                                                                                    </div>
+                                                                                                    {log.transcript}
+                                                                                                </div>
+                                                                                            )}
                                                                                         </div>
                                                                                     ))}
                                                                             </div>

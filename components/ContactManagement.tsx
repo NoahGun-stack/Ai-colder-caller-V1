@@ -32,6 +32,9 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
     const [powerDialConfig, setPowerDialConfig] = useState<{ contacts: Contact[], limit: number }>({ contacts: [], limit: 5 });
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    // Log Delete State
+    const [isLogDeleteModalOpen, setIsLogDeleteModalOpen] = useState(false);
+    const [logToDelete, setLogToDelete] = useState<string | null>(null);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -432,7 +435,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                         <p className="text-[11px] text-[#6b7280] italic py-2">No call history available.</p>
                                     ) : (
                                         callLogs.map((log) => (
-                                            <div key={log.id} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#f8f9fb] rounded-sm">
+                                            <div key={log.id} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#f8f9fb] rounded-sm group hover:border-red-100 transition-colors">
                                                 <div>
                                                     <p className="text-[11px] font-bold text-[#111827]">
                                                         {log.outcome === 'Connected' ? 'Connected Call' : 'Outbound Attempt'}
@@ -441,13 +444,26 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                                         {new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </p>
                                                 </div>
-                                                <div className="text-right">
-                                                    <span className={`block text-[10px] font-bold uppercase ${log.outcome === 'Connected' ? 'text-green-600' : 'text-[#6b7280]'}`}>
-                                                        {log.outcome || 'Unknown'}
-                                                    </span>
-                                                    {log.duration > 0 && (
-                                                        <span className="text-[9px] text-[#9ca3af] font-mono">{Math.floor(log.duration / 60)}m {log.duration % 60}s</span>
-                                                    )}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-right">
+                                                        <span className={`block text-[10px] font-bold uppercase ${log.outcome === 'Connected' ? 'text-green-600' : 'text-[#6b7280]'}`}>
+                                                            {log.outcome || 'Unknown'}
+                                                        </span>
+                                                        {log.duration > 0 && (
+                                                            <span className="text-[9px] text-[#9ca3af] font-mono">{Math.floor(log.duration / 60)}m {log.duration % 60}s</span>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setLogToDelete(log.id);
+                                                            setIsLogDeleteModalOpen(true);
+                                                        }}
+                                                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-all ml-2"
+                                                        title="Delete Log"
+                                                    >
+                                                        <i className="fas fa-trash-alt text-xs"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))
@@ -573,6 +589,49 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         This action cannot be undone.
                     </p>
                 </div>
+            </Modal>
+
+            {/* Log Delete Modal */}
+            <Modal
+                isOpen={isLogDeleteModalOpen}
+                onClose={() => {
+                    setIsLogDeleteModalOpen(false);
+                    setLogToDelete(null);
+                }}
+                title="Delete Call Log"
+                footer={
+                    <>
+                        <button
+                            onClick={() => {
+                                setIsLogDeleteModalOpen(false);
+                                setLogToDelete(null);
+                            }}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (!logToDelete) return;
+                                try {
+                                    await contactsService.deleteCallLog(logToDelete);
+                                    setCallLogs(prev => prev.filter(l => l.id !== logToDelete));
+                                    setIsLogDeleteModalOpen(false);
+                                    setLogToDelete(null);
+                                } catch (err) {
+                                    alert('Failed to delete log');
+                                }
+                            }}
+                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                        >
+                            Delete Log
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-sm text-gray-500">
+                    Are you sure you want to delete this call log? This action cannot be undone.
+                </p>
             </Modal>
         </div >
     );

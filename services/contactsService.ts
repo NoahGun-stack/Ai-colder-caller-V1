@@ -104,25 +104,33 @@ export const contactsService = {
     },
 
     async deleteContactsBulk(ids: string[]) {
-        // First delete related call logs
-        const { error: logsError } = await supabase
-            .from('call_logs')
-            .delete()
-            .in('contact_id', ids);
+        const BATCH_SIZE = 50;
 
-        if (logsError) {
-            console.error('Error deleting related call logs bulk:', logsError);
-            throw logsError;
-        }
+        // Process in batches to avoid URL length limits
+        for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+            const batch = ids.slice(i, i + BATCH_SIZE);
 
-        const { error } = await supabase
-            .from('contacts')
-            .delete()
-            .in('id', ids);
+            // 1. Delete related call logs for this batch
+            const { error: logsError } = await supabase
+                .from('call_logs')
+                .delete()
+                .in('contact_id', batch);
 
-        if (error) {
-            console.error('Error deleting contacts bulk:', error);
-            throw error;
+            if (logsError) {
+                console.error('Error deleting related call logs bulk:', logsError);
+                throw logsError;
+            }
+
+            // 2. Delete contacts for this batch
+            const { error: contactsError } = await supabase
+                .from('contacts')
+                .delete()
+                .in('id', batch);
+
+            if (contactsError) {
+                console.error('Error deleting contacts bulk:', contactsError);
+                throw contactsError;
+            }
         }
     },
 
@@ -139,5 +147,17 @@ export const contactsService = {
         }
 
         return data || [];
+    },
+
+    async deleteCallLog(logId: string) {
+        const { error } = await supabase
+            .from('call_logs')
+            .delete()
+            .eq('id', logId);
+
+        if (error) {
+            console.error('Error deleting call log:', error);
+            throw error;
+        }
     }
 };
