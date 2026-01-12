@@ -61,7 +61,17 @@ serve(async (req) => {
 
                 // 2. Insert Appointment
                 const addressStr = contact.address ? `${contact.address}, ${contact.city}, ${contact.state} ${contact.zip}` : 'Address Not on File';
-                const fullNotes = `Address: ${addressStr}\n\n${args.notes || ''}`;
+                const fullNotes = `Email: ${args.email || 'Not Provided'}\nAddress: ${addressStr}\n\n${args.notes || ''}`;
+
+                // Update Contact Email if provided
+                if (args.email) {
+                    await supabase.from('contacts')
+                        .update({ email: args.email })
+                        .eq('id', contact.id);
+                }
+
+                // Placeholder for Email Notification
+                console.log(`[EMAIL NOTIFICATION] To: Noah (noahgun24@gmail.com) | Subject: New Demo Booked | Body: Contact ${normalizedPhone} booked for ${args.datetime}. Email: ${args.email}`);
 
                 const { error: insertError } = await supabase.from('appointments').insert({
                     contact_id: contact.id,

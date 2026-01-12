@@ -12,18 +12,21 @@ import { BatchMonitor } from './components/BatchMonitor';
 import { AppointmentList } from './components/AppointmentList';
 import { CallLogs } from './components/CallLogs';
 import { contactsService } from './services/contactsService';
-import { Contact } from './types';
+import { Contact, UserProfile } from './types';
+import { AdminDashboard } from './components/AdminDashboard';
 
 import { LandingPage } from './components/LandingPage';
 
-type Tab = 'dashboard' | 'calls' | 'contacts' | 'campaigns' | 'appointments' | 'logs' | 'settings' | 'console';
+type Tab = 'dashboard' | 'calls' | 'contacts' | 'campaigns' | 'appointments' | 'logs' | 'settings' | 'console' | 'admin';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('calls');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContactForCall, setSelectedContactForCall] = useState<Contact | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<'residential' | 'b2b' | 'staffing'>('residential');
   const [callQueue, setCallQueue] = useState<Contact[]>([]);
   const [isAutoPilot, setIsAutoPilot] = useState(false);
   const [isBatchMode, setIsBatchMode] = useState(false);
@@ -38,6 +41,7 @@ const App: React.FC = () => {
       if (session) {
         setShowLanding(false); // If session exists, skip landing
         loadContacts();
+        fetchUserProfile(session.user.id);
       }
     });
 
@@ -52,8 +56,10 @@ const App: React.FC = () => {
       if (session) {
         setShowLanding(false);
         loadContacts();
+        fetchUserProfile(session.user.id);
       } else {
         setContacts([]);
+        setUserProfile(null);
         // Don't force showLanding = true here on logout, 
         // because user might want to see login screen if they just logged out? 
         // Actually for now let's default to Landing on explicit logout or no session
@@ -74,8 +80,30 @@ const App: React.FC = () => {
     }
   };
 
-  const handleStartCall = (contact: Contact) => {
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+        if (data.assigned_campaign) {
+          setSelectedCampaign(data.assigned_campaign);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile', error);
+    }
+  };
+
+
+
+  const handleStartCall = (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
     setSelectedContactForCall(contact);
+    setSelectedCampaign(campaign);
     setCallQueue([]); // Clear queue for single call
     setActiveTab('console');
   };
@@ -121,6 +149,10 @@ const App: React.FC = () => {
     { id: 'appointments', label: 'Appointments', icon: 'fa-calendar-check' },
     { id: 'logs', label: 'Call Logs', icon: 'fa-list' },
   ];
+
+  if (userProfile?.role === 'admin') {
+    navItems.push({ id: 'admin', label: 'Admin', icon: 'fa-users-cog' });
+  }
 
   if (!session && !passwordRecoveryMode) {
     if (showLanding) {
@@ -241,9 +273,19 @@ const App: React.FC = () => {
               setContacts={setContacts}
               onStartCall={handleStartCall}
               onStartPowerDial={handleStartPowerDial}
+              activeCampaign={selectedCampaign}
             />
           )}
-          {activeTab === 'settings' && <CampaignSettings />}
+          {activeTab === 'settings' && (
+            <CampaignSettings
+              selectedCampaign={selectedCampaign}
+              setSelectedCampaign={userProfile?.role === 'admin' ? setSelectedCampaign : undefined}
+            />
+          )}
+
+          {activeTab === 'admin' && userProfile?.role === 'admin' && (
+            <AdminDashboard currentUser={userProfile} />
+          )}
           {activeTab === 'console' && (
             isBatchMode ? (
               <BatchMonitor
@@ -271,6 +313,7 @@ const App: React.FC = () => {
                 hasNext={callQueue.length > 1}
                 isAutoPilot={isAutoPilot}
                 onToggleAutoPilot={() => setIsAutoPilot(!isAutoPilot)}
+                campaign={selectedCampaign}
               />
             )
           )}

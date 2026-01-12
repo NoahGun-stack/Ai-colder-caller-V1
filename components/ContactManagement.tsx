@@ -10,12 +10,14 @@ import { Modal } from './Modal';
 interface ContactManagementProps {
     contacts: Contact[];
     setContacts: React.Dispatch<React.SetStateAction<Contact[]>>;
-    onStartCall: (contact: Contact) => void;
+    onStartCall: (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing') => void;
     onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean, concurrency?: number) => void;
+    activeCampaign?: 'residential' | 'b2b' | 'staffing';
 }
 
-const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setContacts, onStartCall, onStartPowerDial }) => {
+const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setContacts, onStartCall, onStartPowerDial, activeCampaign = 'residential' }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    // Removed local callCampaign state
     const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [callLogs, setCallLogs] = useState<any[]>([]);
@@ -396,16 +398,16 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                         <p className="text-xs text-[#6b7280] font-bold uppercase tracking-wider">{selectedContact.phoneNumber}</p>
                                     </div>
                                 </div>
+
+                                {/* Campaign Selector Removed - Controlled globally via Settings */}
+
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => onStartCall(selectedContact)}
+                                        onClick={() => onStartCall(selectedContact, activeCampaign)}
                                         className="flex-1 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-[#3730a3] transition-colors rounded-sm"
                                     >
                                         Initiate Outbound
                                     </button>
-
-
-
                                 </div>
                             </section>
 

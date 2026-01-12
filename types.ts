@@ -19,6 +19,7 @@ export interface Contact {
   city: string;
   state: string;
   zip: string;
+  email?: string;
   source?: string;
   status: LeadStatus;
   lastCallDate?: string;
@@ -59,4 +60,11 @@ export interface DashboardMetrics {
   conversionRate: number;
   costPerBooking: number;
   dailyCallStats: { day: string; count: number }[];
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  role: 'admin' | 'user';
+  assigned_campaign: 'residential' | 'b2b' | 'staffing';
 }

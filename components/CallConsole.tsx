@@ -12,6 +12,7 @@ interface CallConsoleProps {
   hasNext?: boolean;
   isAutoPilot?: boolean;
   onToggleAutoPilot?: () => void;
+  campaign?: 'residential' | 'b2b';
 }
 
 interface LogEntry {
@@ -20,7 +21,7 @@ interface LogEntry {
   time: string;
 }
 
-const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateContact, onNext, hasNext, isAutoPilot = false, onToggleAutoPilot }) => {
+const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateContact, onNext, hasNext, isAutoPilot = false, onToggleAutoPilot, campaign = 'residential' }) => {
   const [isCalling, setIsCalling] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [userInput, setUserInput] = useState('');
@@ -56,14 +57,6 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
     }
   }, [callStatus, isAutoPilot, hasNext, onNext]);
 
-  // Clean up on unmount
-  // useEffect(() => {
-  //   return () => {
-  //     // Cleanup if needed
-  //   };
-  // }, []);
-
-
   /* Twilio Integration Update */
   /* We no longer import API keys client-side. We hit the backend */
 
@@ -80,7 +73,7 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
     try {
       // Use Vapi Service for the call
       const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
-      await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress);
+      await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, campaign);
 
       setCallStatus('connecting');
 
