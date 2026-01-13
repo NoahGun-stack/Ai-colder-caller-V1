@@ -11,7 +11,7 @@ interface ContactManagementProps {
     contacts: Contact[];
     setContacts: React.Dispatch<React.SetStateAction<Contact[]>>;
     onStartCall: (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing') => void;
-    onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean, concurrency?: number) => void;
+    onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean, concurrency?: number, campaign?: 'residential' | 'b2b' | 'staffing') => void;
     activeCampaign?: 'residential' | 'b2b' | 'staffing';
 }
 
@@ -31,7 +31,11 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
     const [addContactForm, setAddContactForm] = useState({ firstName: '', lastName: '', phoneNumber: '', address: '' });
 
     const [isPowerDialModalOpen, setIsPowerDialModalOpen] = useState(false);
-    const [powerDialConfig, setPowerDialConfig] = useState<{ contacts: Contact[], limit: number }>({ contacts: [], limit: 5 });
+    const [powerDialConfig, setPowerDialConfig] = useState<{ contacts: Contact[], limit: number, campaign: 'residential' | 'b2b' | 'staffing' }>({
+        contacts: [],
+        limit: 5,
+        campaign: activeCampaign || 'residential'
+    });
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     // Log Delete State
@@ -140,12 +144,33 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
     };
 
     const initiatePowerDial = () => {
-        const selectedContacts = contacts.filter(c => selectedIds.has(c.id));
+        const selectedContactsRaw = contacts.filter(c => selectedIds.has(c.id));
+
+        // Deduplicate by Phone Number AND Name (keep first occurrence)
+        const uniqueKeys = new Set<string>();
+        const selectedContacts: Contact[] = [];
+
+        selectedContactsRaw.forEach(contact => {
+            const normalizedPhone = contact.phoneNumber.replace(/\D/g, '');
+            const normalizedName = `${contact.firstName.toLowerCase().trim()}|${contact.lastName.toLowerCase().trim()}`;
+
+            // Check if either phone OR name has been seen
+            if (!uniqueKeys.has(normalizedPhone) && !uniqueKeys.has(normalizedName)) {
+                uniqueKeys.add(normalizedPhone);
+                uniqueKeys.add(normalizedName);
+                selectedContacts.push(contact);
+            }
+        });
+
+        if (selectedContacts.length !== selectedContactsRaw.length) {
+            console.log(`Deduplicated ${selectedContactsRaw.length - selectedContacts.length} contacts with duplicate numbers.`);
+        }
+
         if (selectedContacts.length > 1) {
-            setPowerDialConfig({ contacts: selectedContacts, limit: 5 });
+            setPowerDialConfig({ contacts: selectedContacts, limit: 5, campaign: activeCampaign || 'residential' });
             setIsPowerDialModalOpen(true);
         } else {
-            onStartPowerDial(selectedContacts);
+            onStartPowerDial(selectedContacts, false, false, 1, activeCampaign);
         }
     };
 
@@ -168,6 +193,16 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
 
         return true;
     });
+
+    const hasHadConversation = (status: LeadStatus): boolean => {
+        return [
+            LeadStatus.CONNECTED,
+            LeadStatus.NOT_INTERESTED,
+            LeadStatus.CALL_BACK_LATER,
+            LeadStatus.APPOINTMENT_BOOKED,
+            LeadStatus.DO_NOT_CALL
+        ].includes(status);
+    };
 
     return (
         <div className="h-full flex flex-row overflow-hidden">
@@ -308,6 +343,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Phone Number</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Location</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Status</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Conversation</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Attempts</th>
                                 <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Last Contact</th>
                             </tr>
@@ -349,6 +385,15 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                             }`}>
                                             {contact.status}
                                         </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {hasHadConversation(contact.status) ? (
+                                            <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 text-green-600 rounded-full">
+                                                <i className="fas fa-check text-[10px]"></i>
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-300 text-[10px]">-</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 font-bold text-[#111827] text-[12px] pl-8">{contact.totalCalls || 0}</td>
                                     <td className="px-4 py-3 text-[#6b7280] text-[11px]">
@@ -541,7 +586,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                 footer={(
                     <button
                         onClick={() => {
-                            onStartPowerDial?.(powerDialConfig.contacts, false, true, powerDialConfig.limit);
+                            onStartPowerDial?.(powerDialConfig.contacts, false, true, powerDialConfig.limit, powerDialConfig.campaign);
                             setIsPowerDialModalOpen(false);
                         }}
                         className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded hover:bg-indigo-700 w-full"
@@ -564,6 +609,37 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         onChange={e => setPowerDialConfig({ ...powerDialConfig, limit: parseInt(e.target.value) || 1 })}
                     />
                     <p className="text-[10px] text-gray-500 mt-1">Recommended: 3-5 for best results.</p>
+                </div>
+
+                <div className="mt-4">
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Select Campaign / Agent</label>
+                    <div className="grid grid-cols-1 gap-2">
+                        {[
+                            { id: 'residential', label: 'Residential (Jon - Inspection)', icon: 'fa-home' },
+                            { id: 'b2b', label: 'B2B Sales (Alex - Demo)', icon: 'fa-briefcase' },
+                            { id: 'staffing', label: 'Staffing (Sarah - Recruitment)', icon: 'fa-users' }
+                        ].map((camp) => (
+                            <button
+                                key={camp.id}
+                                onClick={() => setPowerDialConfig({ ...powerDialConfig, campaign: camp.id as any })}
+                                className={`flex items-center gap-3 px-3 py-2 border rounded-sm transition-all text-left ${powerDialConfig.campaign === camp.id
+                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                    }`}
+                            >
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${powerDialConfig.campaign === camp.id ? 'bg-indigo-200' : 'bg-gray-100'
+                                    }`}>
+                                    <i className={`fas ${camp.icon} text-xs`}></i>
+                                </div>
+                                <div>
+                                    <p className="text-[11px] font-bold uppercase">{camp.label}</p>
+                                </div>
+                                {powerDialConfig.campaign === camp.id && (
+                                    <i className="fas fa-check ml-auto text-indigo-600 text-xs"></i>
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </Modal>
 

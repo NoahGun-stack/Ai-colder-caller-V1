@@ -7,6 +7,7 @@ interface BatchMonitorProps {
     concurrency: number;
     onClose: () => void;
     onComplete: () => void;
+    campaign: 'residential' | 'b2b' | 'staffing';
 }
 
 interface ActiveCall {
@@ -18,7 +19,7 @@ interface ActiveCall {
     duration: number; // seconds
 }
 
-export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, onClose, onComplete }) => {
+export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, onClose, onComplete, campaign }) => {
     const [pendingQueue, setPendingQueue] = useState<Contact[]>(queue);
     const [activeCalls, setActiveCalls] = useState<ActiveCall[]>([]);
     const [completedCount, setCompletedCount] = useState(0);
@@ -69,7 +70,7 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
                             // Fire and forget - the interval manages state
                             // In production, we'd handle errors here
                             const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
-                            vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress)
+                            vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, campaign)
                                 .catch(err => console.error("Batch Dial Error:", err));
                         });
 
@@ -114,7 +115,7 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
             // Start calls
             nextBatch.forEach(contact => {
                 const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
-                vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress)
+                vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, campaign)
                     .catch(e => console.error(e));
             });
 

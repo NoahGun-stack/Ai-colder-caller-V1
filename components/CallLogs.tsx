@@ -25,7 +25,7 @@ export const CallLogs: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'attempted'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'attempted' | 'conversation' | 'voicemail'>('all');
 
     // Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -80,6 +80,50 @@ export const CallLogs: React.FC = () => {
 
                     if (statusFilter === 'completed') return isCompleted;
                     if (statusFilter === 'attempted') return !isCompleted;
+                    if (statusFilter === 'conversation' || statusFilter === 'voicemail') {
+                        const conversationOutcomes = [
+                            'connected',
+                            'not interested',
+                            'call back later',
+                            'appointment booked',
+                            'do not call',
+                            'completed',
+                            'customer-ended-call',
+                            'assistant-ended-call'
+                        ];
+
+                        const transcriptLower = (log.transcript || '').toLowerCase();
+
+                        // Detect Voicemail Patterns
+                        const isVoicemail =
+                            /message for\s*(\d\s*){3,}/.test(transcriptLower) || // "message for 5 6 1..."
+                            /at the tone/.test(transcriptLower) ||
+                            /record your message/.test(transcriptLower) ||
+                            /is not available/.test(transcriptLower) ||
+                            /identify yourself/.test(transcriptLower) ||
+                            /please leave your name/.test(transcriptLower);
+
+                        if (statusFilter === 'voicemail') {
+                            return isVoicemail || outcome.includes('voicemail');
+                        }
+
+                        // Smart Filter: Checks if transcript shows an actual dialogue (AND is not a voicemail)
+
+                        // 1. Explicitly look for the user speaking (User:, Customer:, etc.)
+                        const userSpoke = transcriptLower.includes('user:') ||
+                            transcriptLower.includes('customer:') ||
+                            transcriptLower.includes('prospect:') ||
+                            transcriptLower.includes('human:');
+
+                        // 2. Fallback: If no labels found, check for substantial length (> 15 words)
+                        const isLongRawText = transcriptLower.split(' ').length > 15;
+
+                        const hasConversationOutcome = conversationOutcomes.includes(outcome.toLowerCase());
+
+                        // Return true if (Outcome is Valid AND User Spoke) OR (It's a long conversation)
+                        // AND it is NOT a detected voicemail
+                        return !isVoicemail && ((hasConversationOutcome && userSpoke) || isLongRawText);
+                    }
 
                     return true;
                 });
@@ -131,6 +175,8 @@ export const CallLogs: React.FC = () => {
                         <option value="all">All Outcomes</option>
                         <option value="completed">Completed (Connected)</option>
                         <option value="attempted">Attempted (No Answer)</option>
+                        <option value="conversation">Conversation (Spoke to Prospect)</option>
+                        <option value="voicemail">Voicemail (Automated)</option>
                     </select>
 
 

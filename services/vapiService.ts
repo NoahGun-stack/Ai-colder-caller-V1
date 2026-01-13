@@ -27,6 +27,7 @@ export const vapiService = {
         }
 
         console.log(`Initiating Vapi Call to ${formattedNumber} (Original: ${phoneNumber})`);
+        console.log("VERSION: V3 - TRIPLE OUTREACH (Email Removed)");
 
         if (!apiKey) throw new Error("Missing VITE_VAPI_PRIVATE_KEY");
         if (!phoneNumberId) throw new Error(`CRITICAL: Phone ID Missing in Hardcoded File! (v=${phoneNumberId})`);
@@ -41,7 +42,7 @@ export const vapiService = {
         if (campaign === 'b2b') {
             // --- B2B SALES AGENT CONFIG ---
             assistantConfig = {
-                firstMessage: `Hi, is this ${customerName}?`,
+                firstMessage: `Hi, is this ${customerName}? (V3)`,
                 transcriber: {
                     provider: "deepgram",
                     model: "nova-2",
@@ -63,34 +64,36 @@ export const vapiService = {
                             INSTRUCTIONS:
                             1. OPENING (The "News" Pattern Interrupt):
                                - "Hey ${customerName}, this is Alex. Do you want the good news or the bad news first?"
+                               - Wait for their answer.
                                
-                               - IF they say "BAD NEWS":
-                                 "The bad news is I'm a salesperson calling you out of the blue. But the good news is I've built a system that stops you from ever having to make these calls yourself. We're automating the entire lead gen process."
+                               - IF they chose "BAD NEWS":
+                                 SAY: "The bad news is I'm a salesperson calling you out of the blue. But the good news is I've built a system that stops you from ever having to make these calls yourself. We're automating the entire lead gen process."
 
-                               - IF they say "GOOD NEWS":
-                                 "The good news is I've built a system that automates your entire sales process so you never have to cold call again. The bad news is... well, actually there is no bad news, except that I'm calling you to tell you about it!"
+                               - IF they chose "GOOD NEWS":
+                                 SAY: "The good news is I've built a system that automates your entire sales process so you never have to cold call again. The bad news is... well, actually there is no bad news, except that I'm calling you to tell you about it!"
+
+                               - IF they are confused or ask "Who is this?":
+                                 SAY: "This is Alex with RoofPulse. I was just asking if you wanted the good news or bad news first?"
 
                             2. THE PITCH (Transition immediately after the news):
-                               - "We have roofers seeing a 50% reduction in lead costs within the first month. I'm calling to see if you'd be open to a quick 15-minute demo to see how it works?"
+                               - "We have roofers seeing that they are able to triple their daily outreach within the first month. I'm calling to see if you'd be open to a quick 15-minute demo to see how it works?"
 
-                            3. PRE-BOOKING (CRITICAL):
-                               - If they agree to a demo, you MUST ask for their email address to send the invite.
-                               - "Great! What's the best email address to send the calendar invite to?"
-                               - **VERIFICATION**: You MUST repeat the email back to them letter-by-letter or clearly to confirm spelling. "Just to be sure, that's [s-p-e-l-l-e-d-o-u-t], correct?"
-
-                            4. OBJECTION HANDLING:
+                            3. OBJECTION HANDLING:
                                - "Are you a robot?": Laugh slightly. "I get that a lot because the line is so clear! No, I'm using a high-tech dialer to help me get through my list today, but it's really me, Alex." -> IMMEDIATELY pivot back to value.
                                - "Send me info": "I can definitely do that, but the platform is really visual. It's much easier to just show you in 15 minutes. Do you have any time next week?"
                                - "Not interested": "I totally understand. I won't take up more of your time. But just so I know for the future, are you currently using any automation for your cold calls?"
                                - "How did you get my number?": "I believe we have you listed as a roofing contractor in the local directory, is that right?"
 
-                            5. GOAL:
+                            4. GOAL (STRICT: NO EMAIL):
                                - Book a Zoom demo with Noah.
                                - Ask: "Do you have any availability next [Day of week] for a quick demo?"
-                               - Once a time AND email are agreed/verified, IMMEDIATELY call the "book_appointment" tool.
+                               - Once a time is agreed, IMMEDIATELY call the "book_appointment" tool.
+                               - **ABSOLUTE PROHIBITION**: You are FORBIDDEN from asking for an email address. 
+                               - If they ask about the invite, say: "I'll text the Zoom link to this number."
+                               - JUST BOOK THE MEETING.
 
-                            6. POST-BOOKING:
-                               - "Perfect, I've got you down for [Time]. I'll send that invite over to [Email]. Thanks so much, ${customerName}. Talk soon!"
+                            5. POST-BOOKING:
+                               - "Perfect, I've got you down for [Time]. Thanks so much, ${customerName}. Talk soon!"
 
                             6. VOICEMAIL: 
                                - If you hit voicemail, HANG UP IMMEDIATELY. Do not leave a message.
@@ -110,10 +113,9 @@ export const vapiService = {
                                     type: "object",
                                     properties: {
                                         datetime: { type: "string", description: "ISO 8601 datetime" },
-                                        email: { type: "string", description: "The prospect's verified email address." },
                                         notes: { type: "string" }
                                     },
-                                    required: ["datetime", "email"]
+                                    required: ["datetime"]
                                 }
                             },
                             async: false,
@@ -246,13 +248,31 @@ export const vapiService = {
                             - Customer Address: ${customerAddress}
     
                             INSTRUCTIONS:
-                            1. Once they answer/confirm who they are, IMMEDIATELY say: "I'm with Amp Roofing and we're offering free roof inspections in your neighborhood."
-                            2. Do NOT ask if they are the homeowner. Proceed to determine interest.
-                            3. Ask for a specific time for the inspection.
-                            4. Once they provide a time, IMMEDIATELY call the "book_appointment" tool.
-                            5. AFTER booking, say "Great, I have you down for [Time]. Just to confirm, our technician is heading to [Street Number] [Street Name] in [Zip Code], correct?"
-                            6. If they say the address is wrong, ask for the correct address. Then use the "update_address" tool to fix it.
-                            7. Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00" (Force CST offset).`
+                            1. OPENING:
+                               - Once they answer/confirm who they are, IMMEDIATELY say: "I'm with Amp Roofing and we're offering free roof inspections in your neighborhood."
+
+                            2. QUALIFICATION FLOW (Follow this order STRICTLY):
+                               - Q1: "How old is your roof?"
+                               - Q2: "Are you the homeowner at ${customerAddress}?"
+                               
+                               - Q3: "Do you currently have homeowners insurance?"
+                                 * IF YES: "Who is your insurance carrier?"
+                                 * IF NO: "No problem — we do offer financing options with $0 down payment."
+
+                               - Q4: "What type of roof do you have — shingle, metal, or tile?"
+
+                            3. BOOKING:
+                               - "Okay great. We'd love to stop by and give you a free inspection report. What time works best for you?"
+                               - Once they provide a time, IMMEDIATELY call the "book_appointment" tool.
+
+                            4. POST-BOOKING:
+                               - "Great, I have you down for [Time]. Just to confirm, our technician is heading to ${customerAddress}, correct?"
+                               
+                            5. ADDRESS CORRECTION:
+                               - If they say the address is wrong, ask for the correct address. Then use the "update_address" tool to fix it.
+
+                            6. SYSTEM SETTINGS:
+                               - Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00" (Force CST offset).`
                         }
                     ],
                     tools: [

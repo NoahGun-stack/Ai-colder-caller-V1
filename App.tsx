@@ -110,9 +110,10 @@ const App: React.FC = () => {
 
   const [batchConcurrency, setBatchConcurrency] = useState(10);
 
-  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10) => {
+  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
     if (contactsToDial.length === 0) return;
     setCallQueue(contactsToDial);
+    setSelectedCampaign(campaign);
 
     if (batchMode) {
       setIsBatchMode(true);
@@ -291,6 +292,7 @@ const App: React.FC = () => {
               <BatchMonitor
                 queue={callQueue}
                 concurrency={batchConcurrency}
+                campaign={selectedCampaign}
                 onClose={() => {
                   setCallQueue([]);
                   setIsBatchMode(false);
