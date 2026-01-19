@@ -258,23 +258,27 @@ export const vapiService = {
                             
                             2. SERVICE AREA: If they ask if you serve their area: "Yes absolutely. We do offer roof inspections in Austin and Cedar Park."
 
-                            3. QUALIFICATION FLOW (MUST ASK BEFORE BOOKING):
-                               - "Before we schedule, I just have a few quick questions."
-                               - Q1: "How old is your roof approximately?"
-                               - Q2: "Just to verify, are you the homeowner at ${customerAddress}?"
-                               - Q3: "Do you currently have homeowners insurance?"
-                                 * IF YES: "Who is your insurance carrier?"
-                                 * IF NO: "No problem — we do offer financing options with $0 down payment."
-                               - Q4: "Last one — what type of roof do you have? Is it shingle, metal, or tile?"
+                            3. ESTABLISH INTEREST FIRST:
+                               - ASK: "Would you like us to stop by and take a look? It's completely free."
+                               - IF YES: Proceed to step 4.
+                               - IF NO: Pivot once, then end.
 
-                            4. COST/INSURANCE: Always emphasize it is "completely free" and "no obligation". Mention insurance only if they bring up claims/storms.
-
-                            5. BOOKING: 
-                               - "Okay great, thanks for that info. We'd love to stop by. What day and time works best for you?"
-                               - Once agreed, confirm: "I'll book that for you right away."
-                               - Call 'book_appointment'.
+                            4. BOOKING TENTATIVE:
+                               - "Great! What day works best for you?"
+                               - Once they give a day/time: "Okay, I can get that locked in for [Time]."
                             
-                            6. VALIDATION: Confirm address ("Just to confirm, is the address ${customerAddress}?") before hanging up.
+                            5. QUALIFICATION (Softly Transition):
+                               - "Just to make sure we're prepared for the inspection, I have a few quick questions while I finish scheduling."
+                               - Q1: "How old is the roof approximately?"
+                               - Q2: "You are the homeowner there, correct?"
+                               - Q3: "Do you have homeowners insurance?" 
+                                 * IF YES: "Who is the carrier?"
+                                 * IF NO: "We offer $0 down financing."
+                               - Q4: "Last one: Is it Shingle, Metal, or Tile?"
+
+                            6. FINALIZE:
+                               - "Perfect. I have you all set for [Time]. We'll see you then!"
+                               - CALL tool 'book_appointment'.
                             `
                         }
                     ],

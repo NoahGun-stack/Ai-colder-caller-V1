@@ -235,7 +235,7 @@ const App: React.FC = () => {
           </button>
           <div className="flex items-center gap-2 p-2 bg-white border border-[#e5e7eb]">
             <div className="w-6 h-6 bg-[#4338ca] text-white flex items-center justify-center font-bold text-[9px]">AR</div>
-            <span className="text-[11px] font-bold text-[#111827] truncate">Amp Roofing</span>
+            <span className="text-[11px] font-bold text-[#111827] truncate">Prime Shield</span>
           </div>
           <button
             onClick={() => supabase.auth.signOut()}
