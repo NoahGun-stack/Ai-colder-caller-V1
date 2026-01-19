@@ -94,6 +94,73 @@ serve(async (req) => {
                     .update({ status: 'Appointment Booked' })
                     .eq('id', contact.id);
 
+                // --- GOOGLE CALENDAR SYNC (Individual Account) ---
+                try {
+                    // Attempt to get campaign from metadata, fallback to residential
+                    const campaignName = call.assistant?.metadata?.campaign || 'residential';
+                    console.log(`[Google Sync] Looking for user assigned to campaign: ${campaignName}`);
+
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('google_refresh_token')
+                        .eq('assigned_campaign', campaignName)
+                        .not('google_refresh_token', 'is', null)
+                        .single();
+
+                    if (profile && profile.google_refresh_token) {
+                        console.log(`[Google Sync] User found. Refreshing token...`);
+
+                        // 1. Refresh Token
+                        const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
+                        const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+
+                        if (clientId && clientSecret) {
+                            const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: new URLSearchParams({
+                                    client_id: clientId,
+                                    client_secret: clientSecret,
+                                    refresh_token: profile.google_refresh_token,
+                                    grant_type: 'refresh_token'
+                                })
+                            });
+
+                            const tokenData = await refreshRes.json();
+                            if (tokenData.access_token) {
+                                // 2. Create Event
+                                const eventBody = {
+                                    summary: `Demo with ${contact.firstName || 'Lead'} ${contact.lastName || ''}`,
+                                    description: fullNotes,
+                                    start: { dateTime: args.datetime }, // dateTime format: '2025-01-01T10:00:00-06:00'
+                                    end: { dateTime: new Date(new Date(args.datetime).getTime() + 30 * 60000).toISOString() } // 30 min duration
+                                };
+
+                                const calendarRes = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${tokenData.access_token}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(eventBody)
+                                });
+
+                                const calendarData = await calendarRes.json();
+                                console.log(`[Google Sync] Event Created: ${calendarData.htmlLink}`);
+                            } else {
+                                console.error('[Google Sync] Failed to refresh token:', tokenData);
+                            }
+                        } else {
+                            console.error('[Google Sync] Missing Google Credentials in Environment.');
+                        }
+                    } else {
+                        console.log(`[Google Sync] No user found with connected calendar for campaign: ${campaignName}`);
+                    }
+                } catch (calErr) {
+                    console.error('[Google Sync] Error:', calErr);
+                    // Do not fail the booking if calendar sync fails
+                }
+
                 return new Response(JSON.stringify({
                     results: [{
                         toolCallId: toolCall.id,

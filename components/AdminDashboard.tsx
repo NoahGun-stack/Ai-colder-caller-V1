@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { CampaignConfigurator } from './CampaignConfigurator';
 import { supabase } from '../services/supabase';
 import { UserProfile } from '../types';
 
@@ -142,6 +143,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                     </table>
                 </div>
             </div>
-        </div>
+
+            <div className="mt-12 bg-white border border-[#e5e7eb] shadow-sm rounded-sm p-6">
+                {/* Passing setProps as no-op for now unless we lift state, currently Configurator manages its own state */}
+                <CampaignConfigurator />
+            </div>
+        </div >
     );
 };

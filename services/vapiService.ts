@@ -10,7 +10,7 @@ export const vapiService = {
      */
     async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
-        const phoneNumberId = 'bb2b2136-cc88-46c8-9fdc-c09780331308'; // Hardcoded to fix env issue
+        const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID_ACTIVE;
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
 
         console.log("DEBUG: config", { phoneNumberId, apiKey: apiKey ? 'Set' : 'Missing', campaign });
@@ -30,7 +30,7 @@ export const vapiService = {
         console.log("VERSION: V3 - TRIPLE OUTREACH (Email Removed)");
 
         if (!apiKey) throw new Error("Missing VITE_VAPI_PRIVATE_KEY");
-        if (!phoneNumberId) throw new Error(`CRITICAL: Phone ID Missing in Hardcoded File! (v=${phoneNumberId})`);
+        if (!phoneNumberId) throw new Error("Missing VITE_VAPI_PHONE_NUMBER_ID_ACTIVE");
 
         // Get current time in EST for context
         const now = new Date();
@@ -228,7 +228,7 @@ export const vapiService = {
         } else {
             // --- RESIDENTIAL HOMEOWNER AGENT CONFIG (DEFAULT) ---
             assistantConfig = {
-                firstMessage: `Hello, this is Jon with Amp Roofing, am I speaking with ${customerName}?`,
+                firstMessage: `Hello, this is Jon with Prime Shield, am I speaking with ${customerName}?`,
                 transcriber: {
                     provider: "deepgram",
                     model: "nova-2",
@@ -240,7 +240,7 @@ export const vapiService = {
                     messages: [
                         {
                             role: "system",
-                            content: `You are Jon from Amp Roofing, a friendly but persistent roofing sales representative. Your goal is to book a free roof inspection. You are speaking with ${customerName}. 
+                            content: `You are Jon from Prime Shield, a friendly but persistent roofing sales representative. Your goal is to book a free roof inspection. You are speaking with ${customerName}. 
                             
                             CONTEXT:
                             - Today is: ${estDate}
@@ -249,7 +249,7 @@ export const vapiService = {
     
                             INSTRUCTIONS:
                             1. OPENING:
-                               - Once they answer/confirm who they are, IMMEDIATELY say: "I'm with Amp Roofing and we're offering free roof inspections in your neighborhood."
+                               - Once they answer/confirm who they are, IMMEDIATELY say: "I'm with Prime Shield and we're offering free roof inspections in your neighborhood."
 
                             2. QUALIFICATION FLOW (Follow this order STRICTLY):
                                - Q1: "How old is your roof?"
@@ -313,7 +313,7 @@ export const vapiService = {
                 },
                 voice: {
                     provider: "11labs",
-                    voiceId: "burt"
+                    voiceId: "TxGEqnHWrfWFTfGW9XjX" // Josh (Deep, Professional)
                 },
                 recordingEnabled: true, // Enable Recording
                 serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`, // Send end-of-call-report here
@@ -325,6 +325,9 @@ export const vapiService = {
                 }
             };
         }
+
+        // Inject campaign into assistant metadata for webhook retrieval
+        (assistantConfig as any).metadata = { campaign: campaign };
 
         const payload = {
             phoneNumberId: phoneNumberId,
