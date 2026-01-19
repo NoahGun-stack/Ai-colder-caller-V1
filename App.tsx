@@ -88,7 +88,7 @@ const App: React.FC = () => {
       if (data) {
         setUserProfile(data);
         if (data.assigned_campaign) {
-          setSelectedCampaign(data.assigned_campaign);
+          setSelectedCampaign(data.assigned_campaign as 'residential' | 'b2b' | 'staffing');
         }
       }
     } catch (error) {

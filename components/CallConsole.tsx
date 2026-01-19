@@ -73,11 +73,18 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
     try {
       // Use Vapi Service for the call
       const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
+
+      setLogs(prev => [...prev, {
+        role: 'SYSTEM',
+        text: `INITIATING NETWORK REQUEST...`,
+        time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
+      }]);
+
       const response = await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, campaign);
 
       setLogs(prev => [...prev, {
         role: 'SYSTEM',
-        text: `CALL INITIATED. ID: ${response.id || 'Unknown'}`,
+        text: `RESPONSE RECEIVED. ID: ${response.id || 'Unknown'}`,
         time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
       }]);
 
