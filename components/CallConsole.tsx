@@ -12,7 +12,7 @@ interface CallConsoleProps {
   hasNext?: boolean;
   isAutoPilot?: boolean;
   onToggleAutoPilot?: () => void;
-  campaign?: 'residential' | 'b2b' | 'staffing';
+  campaign?: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate';
 }
 
 interface LogEntry {
@@ -80,7 +80,7 @@ const CallConsole: React.FC<CallConsoleProps> = ({ contact, onClose, updateConta
         time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })
       }]);
 
-      const response = await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, campaign);
+      const response = await vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, contact.id, campaign as 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate');
 
       setLogs(prev => [...prev, {
         role: 'SYSTEM',

@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { CampaignConfig } from '../types';
 
 interface CampaignConfiguratorProps {
-    selectedCampaign?: 'residential' | 'b2b' | 'staffing';
-    setSelectedCampaign?: (campaign: 'residential' | 'b2b' | 'staffing') => void;
+    selectedCampaign?: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate';
+    setSelectedCampaign?: (campaign: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate') => void;
 }
 
 export const CampaignConfigurator: React.FC<CampaignConfiguratorProps> = ({ selectedCampaign = 'residential', setSelectedCampaign }) => {
@@ -84,6 +84,18 @@ export const CampaignConfigurator: React.FC<CampaignConfiguratorProps> = ({ sele
                                         className={`flex-1 py-2 text-[10px] font-bold uppercase transition-all ${selectedCampaign === 'staffing' ? 'bg-orange-500 text-white border border-orange-700' : 'bg-white text-gray-500 border border-gray-200'}`}
                                     >
                                         Staffing
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedCampaign('painting')}
+                                        className={`flex-1 py-2 text-[10px] font-bold uppercase transition-all ${selectedCampaign === 'painting' ? 'bg-purple-600 text-white border border-purple-800' : 'bg-white text-gray-500 border border-gray-200'}`}
+                                    >
+                                        Painting
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedCampaign('real_estate')}
+                                        className={`flex-1 py-2 text-[10px] font-bold uppercase transition-all ${selectedCampaign === 'real_estate' ? 'bg-green-600 text-white border border-green-800' : 'bg-white text-gray-500 border border-gray-200'}`}
+                                    >
+                                        Home Buyer
                                     </button>
                                 </div>
                             </div>

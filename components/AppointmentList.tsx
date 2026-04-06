@@ -233,7 +233,7 @@ export const AppointmentList: React.FC = () => {
                                                 dateKey}
                                     </h3>
                                     <ul className="space-y-4">
-                                        {groupApts.map((apt) => {
+                                        {(groupApts as Appointment[]).map((apt) => {
                                             const date = new Date(apt.datetime);
                                             const isPast = date < new Date();
                                             const address = [apt.contact?.address, apt.contact?.city, apt.contact?.state].filter(Boolean).join(', ');

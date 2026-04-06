@@ -7,8 +7,10 @@ export const vapiService = {
      * Initiates an outbound phone call via Vapi.ai
      * @param phoneNumber The customer's phone number (E.164 format preferred)
      * @param customerName Name of the customer for context
+     * @param customerAddress Address for context
+     * @param contactId Database ID of the contact for tracking
      */
-    async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') {
+    async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string, contactId: string, campaign: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate' = 'residential') {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
         const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID_ACTIVE;
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
@@ -27,7 +29,7 @@ export const vapiService = {
         }
 
         console.log(`Initiating Vapi Call to ${formattedNumber} (Original: ${phoneNumber})`);
-        console.log("VERSION: V3 - TRIPLE OUTREACH (Email Removed)");
+        console.log("VERSION: V4 - ID TRACKING ENABLED");
 
         if (!apiKey) throw new Error("Missing VITE_VAPI_PRIVATE_KEY");
         if (!phoneNumberId) throw new Error("Missing VITE_VAPI_PHONE_NUMBER_ID_ACTIVE");
@@ -225,10 +227,186 @@ export const vapiService = {
                     enabled: true
                 }
             };
+        } else if (campaign === 'painting') {
+            // --- PAINTING ESTIMATE AGENT CONFIG ---
+            assistantConfig = {
+                firstMessage: `Hi, is this ${customerName}?`,
+                transcriber: {
+                    provider: "deepgram",
+                    model: "nova-2",
+                    language: "en-US"
+                },
+                model: {
+                    provider: "openai",
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `You are Taylor, a professional appointment coordinator for an exterior and interior painting company. You are friendly, helpful, and natural.
+                            
+                            CONTEXT:
+                            - Prospect Name: ${customerName}
+                            - Prospect Address: ${customerAddress}
+                            - Today is: ${estDate}
+
+                            INSTRUCTIONS:
+                            1. OPENING:
+                               - "Hi, is this ${customerName}?"
+                               - Once confirmed: "Hi ${customerName}, this is Taylor with [Painting Company]. We are working on a few homes in your neighborhood this week giving out free estimates for exterior and interior painting. Would you be open to having us take a quick look and give you a free, no-obligation quote for a paint job?"
+
+                            2. OBJECTION HANDLING:
+                               - "We don't need painting right now": "I completely understand. Sometimes a fresh coat is the easiest way to protect the home's value, even if it's just touching up the trim. Would it hurt to just get a free estimate so you have it on file for later?"
+                               - "How much does it cost?": "The estimate is completely free. We just need to stop by to take some measurements so we can give you an accurate price."
+
+                            3. GOAL:
+                               - Set up an appointment for a sales rep to visit the home to provide the estimate for the paint job.
+                               - Ask: "What day and time works best for you to have someone stop by?"
+                               - Once a time is agreed, IMMEDIATELY call the "book_appointment" tool.
+
+                            4. QUALIFICATION:
+                               - After booking the time, ask: "Are we looking at exterior painting, interior, or both?"
+                               - "And are you the homeowner there at ${customerAddress}?"
+
+                            5. POST-BOOKING:
+                               - "Perfect, we are all set for [Time]. A member of our team will see you then. Thanks for your time, ${customerName}!"
+
+                            6. SYSTEM SETTINGS:
+                               - Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00".`
+                        }
+                    ],
+                    tools: [
+                        {
+                            type: "function",
+                            function: {
+                                name: "book_appointment",
+                                description: "Books a painting estimate appointment so a sales rep can visit the home.",
+                                parameters: {
+                                    type: "object",
+                                    properties: {
+                                        datetime: { type: "string", description: "ISO 8601 datetime" },
+                                        notes: { type: "string" }
+                                    },
+                                    required: ["datetime"]
+                                }
+                            },
+                            async: false,
+                            server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
+                        },
+                        {
+                            type: "function",
+                            function: {
+                                name: "update_address",
+                                description: "Updates the customer's property address if incorrect.",
+                                parameters: {
+                                    type: "object",
+                                    properties: {
+                                        new_address: { type: "string", description: "The full corrected address provided by the user." }
+                                    },
+                                    required: ["new_address"]
+                                }
+                            },
+                            async: false,
+                            server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
+                        }
+                    ]
+                },
+                voice: {
+                    provider: "11labs",
+                    voiceId: "EXAVITQu4vr4xnSDxMaL" // Bella (Professional Female)
+                },
+                recordingEnabled: true,
+                serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`,
+                endCallFunctionEnabled: true,
+                voicemailDetection: {
+                    provider: "twilio",
+                    voicemailDetectionTypes: ["machine_start", "machine_end_beep", "machine_end_other"],
+                    enabled: true
+                }
+            };
+        } else if (campaign === 'real_estate') {
+            // --- REAL ESTATE AGENT CONFIG ---
+            assistantConfig = {
+                firstMessage: `Hi, is this ${customerName}?`,
+                transcriber: {
+                    provider: "deepgram",
+                    model: "nova-2",
+                    language: "en-US"
+                },
+                model: {
+                    provider: "openai",
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `You are Mike, a professional acquisitions manager for a local real estate investment firm.
+                            
+                            CONTEXT:
+                            - Prospect Name: ${customerName}
+                            - Prospect Address: ${customerAddress}
+                            - Today is: ${estDate}
+
+                            INSTRUCTIONS:
+                            1. OPENING:
+                               - "Hi, is this ${customerName}?"
+                               - Once confirmed: "Hi ${customerName}, this is Mike. I'm a local home buyer calling about your property on ${customerAddress}. I'm looking to buy a couple more houses in the area this month and was wondering if you've ever considered selling?"
+
+                            2. OBJECTION HANDLING:
+                               - "Not interested": "No problem at all! Do you happen to have any other properties, maybe rentals, that you'd consider parting with?"
+                               - "How much will you give me?": "We'd love to give you a fair cash offer, but we usually need to get a few more details first to get an accurate number."
+
+                            3. QUALIFICATION (Softly Transition if interested):
+                               - "Are there any major repairs needed, or is it in pretty good shape?"
+                               - "When you think about selling, is that something you're looking to do in the next few weeks, or further down the road?"
+
+                            4. GOAL:
+                               - Set up a longer phone call for a deeper evaluation and a cash offer presentation with Noah.
+                               - Ask: "What day and time works best for you to have a quick call with our lead investor, Noah?"
+                               - Once a time is agreed, IMMEDIATELY call the "book_appointment" tool.
+
+                            5. POST-BOOKING:
+                               - "Perfect, we are all set for [Time]. Noah will reach out then. Thanks for your time, ${customerName}!"
+
+                            6. SYSTEM SETTINGS:
+                               - Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00".`
+                        }
+                    ],
+                    tools: [
+                        {
+                            type: "function",
+                            function: {
+                                name: "book_appointment",
+                                description: "Books a follow-up call with the lead investor.",
+                                parameters: {
+                                    type: "object",
+                                    properties: {
+                                        datetime: { type: "string", description: "ISO 8601 datetime" },
+                                        notes: { type: "string" }
+                                    },
+                                    required: ["datetime"]
+                                }
+                            },
+                            async: false,
+                            server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
+                        }
+                    ]
+                },
+                voice: {
+                    provider: "11labs",
+                    voiceId: "TxGEqnHWrfWFTfGW9XjX"
+                },
+                recordingEnabled: true,
+                serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`,
+                endCallFunctionEnabled: true,
+                voicemailDetection: {
+                    provider: "twilio",
+                    voicemailDetectionTypes: ["machine_start", "machine_end_beep", "machine_end_other"],
+                    enabled: true
+                }
+            };
         } else {
             // --- RESIDENTIAL HOMEOWNER AGENT CONFIG (DEFAULT) ---
             assistantConfig = {
-                firstMessage: `Hi, I'm with Prime Shield and I wanted to see if you'd be interested in a free roof inspection.`,
+                firstMessage: `Hi, this is Jon with Prime Shield. We are in your neighborhood offering free roof inspections.`,
                 transcriber: {
                     provider: "deepgram",
                     model: "nova-2",
@@ -248,7 +426,7 @@ export const vapiService = {
                             - Time: ${estTime}
     
                             TRAINING DATA (TOP PERFORMER SCRIPT):
-                            - OPENING HOOK: "Hi, I'm with Prime Shield... I wanted to see if you'd be interested in a free roof inspection." (Be Direct).
+                            - OPENING HOOK: "Hi, I'm with Prime Shield... we are in your neighborhood offering free roof inspections to all homeowners." (Be Direct).
                             - THE "WHY": "Over time roofs can develop issues like leaks or wear and tear that may not be obvious at first. Our inspection help catch potential problems early before they turn into costly repairs."
                             - INSURANCE OBJECTION: "The inspection is completely free with no obligation. We do work with insurance companies if any issues are found, especially after events like hailstorms."
                             - CLOSING: "Would you like us to take a quick look at your roof for free?" -> "What day and time works best for you?"
@@ -276,9 +454,13 @@ export const vapiService = {
                                  * IF NO: "We offer $0 down financing."
                                - Q4: "Last one: Is it Shingle, Metal, or Tile?"
 
-                            6. FINALIZE:
-                               - "Perfect. I have you all set for [Time]. We'll see you then!"
-                               - CALL tool 'book_appointment'.
+                            7. VOICEMAIL:
+                               - If you detect a voicemail machine or beep, DO NOT leave a message. HANG UP IMMEDIATELY.
+                            
+                            8. STYLE (CRITICAL):
+                               - Speak naturally and casually. Do not sound like a robot.
+                               - Use occasional fillers like "um", "uh", or "you know" to sound authentic.
+                               - Vary your pitch and tone.
                             `
                         }
                     ],
@@ -320,11 +502,15 @@ export const vapiService = {
                 },
                 voice: {
                     provider: "11labs",
-                    voiceId: "TxGEqnHWrfWFTfGW9XjX" // Josh (Deep, Professional)
+                    voiceId: "burt",
+                    speed: 1.1,
+                    stability: 0.5,
+                    similarityBoost: 0.75
                 },
-                recordingEnabled: true, // Enable Recording
-                serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`, // Send end-of-call-report here
-                endCallFunctionEnabled: true, // Explicitly enable end-call reports
+                silenceTimeoutSeconds: 20, // Hang up after 20s of silence to save costs
+                recordingEnabled: true,
+                serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`,
+                endCallFunctionEnabled: true,
                 voicemailDetection: {
                     provider: "twilio",
                     voicemailDetectionTypes: ["machine_start", "machine_end_beep", "machine_end_other"],
@@ -333,8 +519,9 @@ export const vapiService = {
             };
         }
 
-        // Inject campaign into assistant metadata for webhook retrieval
-        (assistantConfig as any).metadata = { campaign: campaign };
+
+        // Inject campaign and contactId into assistant metadata for webhook retrieval
+        (assistantConfig as any).metadata = { campaign: campaign, contactId: contactId };
 
         const payload = {
             phoneNumberId: phoneNumberId,

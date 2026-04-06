@@ -7,7 +7,7 @@ interface BatchMonitorProps {
     concurrency: number;
     onClose: () => void;
     onComplete: () => void;
-    campaign: 'residential' | 'b2b' | 'staffing';
+    campaign: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate';
 }
 
 interface ActiveCall {
@@ -55,45 +55,6 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
                     duration: Math.floor((Date.now() - call.startTime) / 1000)
                 }));
 
-                // 2. Replenish slots if we have capacity and pending items
-                const slotsAvailable = concurrency - remainingCalls.length;
-
-                if (slotsAvailable > 0) {
-                    setPendingQueue(currentQueue => {
-                        if (currentQueue.length === 0) return currentQueue;
-
-                        const nextBatch = currentQueue.slice(0, slotsAvailable);
-                        const newRemainingIds = new Set(nextBatch.map(c => c.id));
-
-                        // Fire off the calls
-                        nextBatch.forEach(contact => {
-                            // Fire and forget - the interval manages state
-                            // In production, we'd handle errors here
-                            const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
-                            vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, campaign)
-                                .catch(err => console.error("Batch Dial Error:", err));
-                        });
-
-                        const newCalls: ActiveCall[] = nextBatch.map(c => ({
-                            contactId: c.id,
-                            contactName: `${c.firstName} ${c.lastName}`,
-                            phoneNumber: c.phoneNumber,
-                            status: 'Initializing',
-                            startTime: Date.now(),
-                            duration: 0
-                        }));
-
-                        // Dirty hack to update state inside the setPendingQueue callback to avoid race conditions
-                        // Actually, we can't update activeCalls here easily without refs or complex reducers.
-                        // Instead, we'll assume the outer loop handles the *next* tick for replenishment?
-                        // No, let's do it cleanly:
-                        // We need to return the *ActiveCalls* update here, but we are inside ActiveCalls setter.
-                        // So we need to pull from pendingQueue via closure or ref? 
-                        // To avoid complexity, let's just use a ref for the queue or split the effect.
-                        return currentQueue;
-                    });
-                }
-
                 return remainingCalls;
             });
         }, 1000);
@@ -101,34 +62,52 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
         return () => clearInterval(interval);
     }, [isPaused, concurrency]);
 
+    const dialedIds = useRef(new Set<string>());
+
     // Separate effect for replenishment to avoid complex state merging
     useEffect(() => {
         if (isPaused) return;
 
         if (activeCalls.length < concurrency && pendingQueue.length > 0) {
             const needed = concurrency - activeCalls.length;
-            const nextBatch = pendingQueue.slice(0, needed);
-            const remainingQueue = pendingQueue.slice(needed);
 
-            setPendingQueue(remainingQueue);
+            // Filter out already dialed IDs from the pending queue to be safe
+            // This protects against the effect running multiple times with the same pendingQueue
+            const validNextBatch = pendingQueue.filter(c => !dialedIds.current.has(c.id));
 
-            // Start calls
-            nextBatch.forEach(contact => {
-                const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
-                vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, campaign)
-                    .catch(e => console.error(e));
-            });
+            if (validNextBatch.length === 0 && pendingQueue.length > 0) {
+                // If we have items but they are all dialed, effectively remove them
+                setPendingQueue(prev => prev.filter(c => !dialedIds.current.has(c.id)));
+                return;
+            }
 
-            const newCalls: ActiveCall[] = nextBatch.map(c => ({
-                contactId: c.id,
-                contactName: `${c.firstName} ${c.lastName}`,
-                phoneNumber: c.phoneNumber,
-                status: 'Initializing',
-                startTime: Date.now(),
-                duration: 0
-            }));
+            const nextBatch = validNextBatch.slice(0, needed);
+            const remainingQueue = validNextBatch.slice(needed); // Logic fix: ensure we slice from the filtered list
 
-            setActiveCalls(prev => [...prev, ...newCalls]);
+            if (nextBatch.length > 0) {
+                setPendingQueue(remainingQueue);
+
+                // Start calls
+                nextBatch.forEach(contact => {
+                    if (dialedIds.current.has(contact.id)) return; // Double check
+                    dialedIds.current.add(contact.id);
+
+                    const fullAddress = String([contact.address, contact.city, contact.state, contact.zip].filter(Boolean).join(', ')) || "Address Not Available";
+                    vapiService.initiateOutboundCall(contact.phoneNumber, contact.firstName, fullAddress, contact.id, campaign)
+                        .catch(e => console.error(e));
+                });
+
+                const newCalls: ActiveCall[] = nextBatch.map(c => ({
+                    contactId: c.id,
+                    contactName: `${c.firstName} ${c.lastName}`,
+                    phoneNumber: c.phoneNumber,
+                    status: 'Initializing',
+                    startTime: Date.now(),
+                    duration: 0
+                }));
+
+                setActiveCalls(prev => [...prev, ...newCalls]);
+            }
         } else if (activeCalls.length === 0 && pendingQueue.length === 0 && completedCount > 0) {
             // All done
             // onComplete(); // Optional auto-close

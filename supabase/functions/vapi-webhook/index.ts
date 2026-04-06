@@ -230,16 +230,32 @@ serve(async (req) => {
             const call = message.call;
             const recordingUrl = message.recordingUrl || message.stereoRecordingUrl;
 
-            const rawPhoneNumber = call.customer.number;
-            const normalizedPhone = rawPhoneNumber.replace(/\D/g, '').slice(-10);
-            const last4 = normalizedPhone.slice(-4);
+            const contactId = call.assistant?.metadata?.contactId;
+            let contact;
 
-            const { data: contacts } = await supabase
-                .from('contacts')
-                .select('id, status')
-                .ilike('phoneNumber', `%${last4}%`);
+            if (contactId) {
+                const { data } = await supabase
+                    .from('contacts')
+                    .select('id, status, total_calls')
+                    .eq('id', contactId)
+                    .single();
+                contact = data;
+                console.log(`[Webhook] Found contact by ID: ${contactId}`);
+            }
 
-            const contact = contacts?.[0];
+            if (!contact) {
+                const rawPhoneNumber = call.customer.number;
+                const normalizedPhone = rawPhoneNumber.replace(/\D/g, '').slice(-10);
+                const last4 = normalizedPhone.slice(-4);
+
+                const { data: contacts } = await supabase
+                    .from('contacts')
+                    .select('id, status, total_calls')
+                    .ilike('phoneNumber', `%${last4}%`);
+
+                contact = contacts?.[0];
+                console.log(`[Webhook] Fallback lookup by phone: ${last4} -> Found: ${contact?.id}`);
+            }
 
             if (contact) {
                 await supabase.from('call_logs').insert({
@@ -255,15 +271,18 @@ serve(async (req) => {
                 // Update Status Logic (Replicated from server)
                 if (contact.status !== 'Appointment Booked') {
                     const newStatus = (call.duration || 0) > 0 ? 'Connected' : 'Attempted';
+                    let statusToSet = newStatus;
 
                     if (contact.status === 'Connected' && newStatus === 'Attempted') {
                         // skip downgrade
-                    } else if (contact.status !== newStatus) {
-                        await supabase.from('contacts').update({
-                            status: newStatus,
-                            last_contacted_at: new Date().toISOString()
-                        }).eq('id', contact.id);
+                        statusToSet = contact.status;
                     }
+
+                    await supabase.from('contacts').update({
+                        status: statusToSet,
+                        last_contacted_at: new Date().toISOString(),
+                        total_calls: (contact.total_calls || 0) + 1
+                    }).eq('id', contact.id);
                 }
             }
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

@@ -25,7 +25,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('calls');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContactForCall, setSelectedContactForCall] = useState<Contact | null>(null);
-  const [selectedCampaign, setSelectedCampaign] = useState<'residential' | 'b2b' | 'staffing'>('residential');
+  const [selectedCampaign, setSelectedCampaign] = useState<'residential' | 'b2b' | 'staffing' | 'painting'>('residential');
   const [callQueue, setCallQueue] = useState<Contact[]>([]);
   const [isAutoPilot, setIsAutoPilot] = useState(false);
   const [isBatchMode, setIsBatchMode] = useState(false);
@@ -68,6 +68,36 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Real-time subscription for contact updates (Call Status, etc.)
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for INSERT/UPDATE/DELETE
+          schema: 'public',
+          table: 'contacts',
+        },
+        (payload: any) => {
+          if (payload.eventType === 'UPDATE') {
+            setContacts((current) =>
+              current.map((c) => (c.id === payload.new.id ? { ...c, ...(payload.new as Contact) } : c))
+            );
+          } else if (payload.eventType === 'INSERT') {
+            setContacts((current) => [payload.new as Contact, ...current]);
+          } else if (payload.eventType === 'DELETE') {
+            setContacts((current) => current.filter((c) => c.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const loadContacts = async () => {
     try {
       const data = await contactsService.fetchContacts();
@@ -88,7 +118,7 @@ const App: React.FC = () => {
       if (data) {
         setUserProfile(data);
         if (data.assigned_campaign) {
-          setSelectedCampaign(data.assigned_campaign as 'residential' | 'b2b' | 'staffing');
+          setSelectedCampaign(data.assigned_campaign as 'residential' | 'b2b' | 'staffing' | 'painting');
         }
       }
     } catch (error) {
@@ -98,7 +128,7 @@ const App: React.FC = () => {
 
 
 
-  const handleStartCall = (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
+  const handleStartCall = (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' | 'painting' = 'residential') => {
     setSelectedContactForCall(contact);
     setSelectedCampaign(campaign);
     setCallQueue([]); // Clear queue for single call
@@ -107,7 +137,7 @@ const App: React.FC = () => {
 
   const [batchConcurrency, setBatchConcurrency] = useState(10);
 
-  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
+  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10, campaign: 'residential' | 'b2b' | 'staffing' | 'painting' = 'residential') => {
     if (contactsToDial.length === 0) return;
     setCallQueue(contactsToDial);
     setSelectedCampaign(campaign);
