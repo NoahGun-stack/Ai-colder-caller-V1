@@ -67,29 +67,29 @@ const LeadManagement: React.FC<LeadManagementProps> = ({ leads, setLeads, onStar
   return (
     <div className="h-full flex flex-row overflow-hidden">
       {/* Left Area: Table List */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all ${selectedLead ? 'border-r border-[#e5e7eb]' : ''}`}>
-        <div className="p-4 border-b border-[#e5e7eb] flex items-center justify-between bg-white">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all ${selectedLead ? 'border-r border-[#404040]' : ''}`}>
+        <div className="p-4 border-b border-[#404040] flex items-center justify-between bg-[#080808]">
           <div className="relative w-64">
-            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] text-[11px]"></i>
+            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#d1d5db] text-[11px]"></i>
             <input
               type="text"
               placeholder="Search prospects..."
-              className="w-full pl-8 pr-4 py-2 border border-[#e5e7eb] text-[12px] outline-none focus:border-[#4338ca] transition-all"
+              className="w-full pl-8 pr-4 py-2 border border-[#404040] text-[12px] outline-none focus:border-[#d4a843] transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex gap-2">
-            <button className="px-3 py-2 border border-[#e5e7eb] text-[11px] font-bold uppercase text-[#111827] hover:bg-[#f8f9fb]">Bulk Action</button>
+            <button className="px-3 py-2 border border-[#404040] text-[11px] font-bold uppercase text-white hover:bg-[#1a1a1a]">Bulk Action</button>
             <button
               onClick={() => setShowImporter(true)}
-              className="px-3 py-2 border border-[#e5e7eb] text-[11px] font-bold uppercase text-[#111827] hover:bg-[#f8f9fb]"
+              className="px-3 py-2 border border-[#404040] text-[11px] font-bold uppercase text-white hover:bg-[#1a1a1a]"
             >
               Import CSV
             </button>
             <button
               onClick={handleAddProspect}
-              className="px-3 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase hover:bg-[#3730a3] transition-colors"
+              className="px-3 py-2 bg-[#d4a843] text-white text-[11px] font-bold uppercase hover:bg-[#e8c06a] transition-colors"
             >
               Add Prospect
             </button>
@@ -112,20 +112,20 @@ const LeadManagement: React.FC<LeadManagementProps> = ({ leads, setLeads, onStar
               {filteredLeads.map((lead) => (
                 <tr
                   key={lead.id}
-                  className={`cursor-pointer hover:bg-[#f8f9fb] transition-colors ${selectedLead?.id === lead.id ? 'bg-[#f5f7ff]' : ''}`}
+                  className={`cursor-pointer hover:bg-[#1a1a1a] transition-colors ${selectedLead?.id === lead.id ? 'bg-[#f5f7ff]' : ''}`}
                   onClick={() => setSelectedLead(lead)}
                 >
                   <td className="w-8 px-4"><input type="checkbox" onClick={e => e.stopPropagation()} /></td>
-                  <td className="font-bold text-[#111827]">{lead.firstName} {lead.lastName}</td>
-                  <td className="text-[#6b7280] font-mono">{lead.phoneNumber}</td>
-                  <td className="text-[#6b7280] uppercase text-[10px] font-bold">Standard Outreach</td>
+                  <td className="font-bold text-white">{lead.firstName} {lead.lastName}</td>
+                  <td className="text-[#d1d5db] font-mono">{lead.phoneNumber}</td>
+                  <td className="text-[#d1d5db] uppercase text-[10px] font-bold">Standard Outreach</td>
                   <td>
-                    <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase ${lead.status === LeadStatus.APPOINTMENT_BOOKED ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#e5e7eb] text-[#6b7280]'
+                    <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase ${lead.status === LeadStatus.APPOINTMENT_BOOKED ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#404040] text-[#d1d5db]'
                       }`}>
                       {lead.status}
                     </span>
                   </td>
-                  <td className="text-[#6b7280] text-[11px]">10 Oct, 14:22</td>
+                  <td className="text-[#d1d5db] text-[11px]">10 Oct, 14:22</td>
                 </tr>
               ))}
             </tbody>
@@ -135,66 +135,66 @@ const LeadManagement: React.FC<LeadManagementProps> = ({ leads, setLeads, onStar
 
       {/* Right Area: Context Detail Panel (Persistent) */}
       {selectedLead && (
-        <div className="w-[380px] shrink-0 flex flex-col bg-white overflow-hidden shadow-2xl">
-          <div className="p-5 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9fb]">
-            <h3 className="text-sm font-bold text-[#111827] uppercase tracking-wide">Prospect Context</h3>
-            <button onClick={() => setSelectedLead(null)} className="text-[#6b7280] hover:text-[#111827]"><i className="fas fa-times"></i></button>
+        <div className="w-[380px] shrink-0 flex flex-col bg-[#080808] overflow-hidden shadow-2xl">
+          <div className="p-5 border-b border-[#404040] flex items-center justify-between bg-[#1a1a1a]">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wide">Prospect Context</h3>
+            <button onClick={() => setSelectedLead(null)} className="text-[#d1d5db] hover:text-white"><i className="fas fa-times"></i></button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             <section>
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-[#f5f7ff] text-[#4338ca] flex items-center justify-center font-bold text-lg">
+                <div className="w-12 h-12 bg-[#f5f7ff] text-[#d4a843] flex items-center justify-center font-bold text-lg">
                   {selectedLead.firstName[0]}{selectedLead.lastName[0]}
                 </div>
                 <div>
-                  <h4 className="text-base font-bold text-[#111827]">{selectedLead.firstName} {selectedLead.lastName}</h4>
-                  <p className="text-xs text-[#6b7280] font-bold uppercase">{selectedLead.phoneNumber}</p>
+                  <h4 className="text-base font-bold text-white">{selectedLead.firstName} {selectedLead.lastName}</h4>
+                  <p className="text-xs text-[#d1d5db] font-bold uppercase">{selectedLead.phoneNumber}</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => onStartCall(selectedLead)}
-                  className="flex-1 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm"
+                  className="flex-1 py-2 bg-[#d4a843] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm"
                 >
                   Initiate Outbound
                 </button>
-                <button className="px-4 py-2 border border-[#e5e7eb] text-[#111827] text-[11px] font-bold uppercase hover:bg-[#f8f9fb]">Message</button>
+                <button className="px-4 py-2 border border-[#404040] text-white text-[11px] font-bold uppercase hover:bg-[#1a1a1a]">Message</button>
               </div>
             </section>
 
             <section className="space-y-4">
-              <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Operational Data</h5>
+              <h5 className="text-[10px] font-black text-[#d1d5db] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Operational Data</h5>
               <div className="grid grid-cols-2 gap-y-4 text-[11px]">
                 <div>
-                  <p className="text-[#6b7280] mb-1">Status</p>
-                  <p className="font-bold text-[#111827] uppercase">{selectedLead.status}</p>
+                  <p className="text-[#d1d5db] mb-1">Status</p>
+                  <p className="font-bold text-white uppercase">{selectedLead.status}</p>
                 </div>
                 <div>
-                  <p className="text-[#6b7280] mb-1">Source</p>
-                  <p className="font-bold text-[#111827] uppercase">CSV Import</p>
+                  <p className="text-[#d1d5db] mb-1">Source</p>
+                  <p className="font-bold text-white uppercase">CSV Import</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-[#6b7280] mb-1">Primary Location</p>
-                  <p className="font-bold text-[#111827] uppercase">{selectedLead.address}</p>
-                  <p className="text-[#6b7280] text-[10px]">{selectedLead.city}, {selectedLead.state}</p>
+                  <p className="text-[#d1d5db] mb-1">Primary Location</p>
+                  <p className="font-bold text-white uppercase">{selectedLead.address}</p>
+                  <p className="text-[#d1d5db] text-[10px]">{selectedLead.city}, {selectedLead.state}</p>
                 </div>
               </div>
             </section>
 
             <section className="space-y-4">
-              <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Call Ledger</h5>
+              <h5 className="text-[10px] font-black text-[#d1d5db] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Call Ledger</h5>
               <div className="space-y-3">
                 {[
                   { date: '12 Oct', time: '14:20', type: 'Outbound', status: 'Connected' },
                   { date: '11 Oct', time: '10:15', type: 'Outbound', status: 'No-Answer' },
                 ].map((log, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#f8f9fb]">
+                  <div key={i} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#1a1a1a]">
                     <div>
-                      <p className="text-[11px] font-bold text-[#111827]">{log.type} Call</p>
-                      <p className="text-[10px] text-[#6b7280]">{log.date} at {log.time}</p>
+                      <p className="text-[11px] font-bold text-white">{log.type} Call</p>
+                      <p className="text-[10px] text-[#d1d5db]">{log.date} at {log.time}</p>
                     </div>
-                    <span className="text-[10px] font-bold text-[#6b7280] uppercase">{log.status}</span>
+                    <span className="text-[10px] font-bold text-[#d1d5db] uppercase">{log.status}</span>
                   </div>
                 ))}
               </div>

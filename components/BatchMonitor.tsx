@@ -120,12 +120,12 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
             {/* Header */}
             <header className="px-6 py-4 bg-[#1f2937] border-b border-[#374151] flex items-center justify-between shadow-lg">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-900/50">
+                    <div className="w-10 h-10 bg-[#d4a843] rounded-lg flex items-center justify-center shadow-lg shadow-indigo-900/50">
                         <i className="fas fa-network-wired text-white text-lg"></i>
                     </div>
                     <div>
                         <h2 className="text-lg font-bold tracking-tight uppercase">Parallel AI Operations</h2>
-                        <div className="flex items-center gap-3 text-xs font-mono text-gray-400">
+                        <div className="flex items-center gap-3 text-xs font-mono text-[#e5e7eb]">
                             <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> {activeCalls.length} Active Lines</span>
                             <span>•</span>
                             <span>{completedCount} / {totalQueued} Completed</span>
@@ -159,11 +159,11 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
             {/* Main Grid */}
             <div className="flex-1 p-6 overflow-y-auto">
                 {activeCalls.length === 0 && pendingQueue.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
+                    <div className="h-full flex flex-col items-center justify-center text-[#d1d5db]">
                         <i className="fas fa-check-circle text-5xl mb-4 text-green-500"></i>
                         <h3 className="text-xl font-bold text-white uppercase tracking-wider">Batch Operation Complete</h3>
                         <p className="mt-2 text-sm font-mono">Processed {totalQueued} records successfully.</p>
-                        <button onClick={onClose} className="mt-6 px-6 py-2 bg-indigo-600 text-white font-bold uppercase text-xs rounded-sm hover:bg-indigo-500">Return to Contacts</button>
+                        <button onClick={onClose} className="mt-6 px-6 py-2 bg-[#d4a843] text-white font-bold uppercase text-xs rounded-sm hover:bg-indigo-500">Return to Contacts</button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -176,7 +176,7 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
 
                                 <div className="pl-3 mb-3 flex justify-between items-start">
                                     <h4 className="font-bold text-sm text-white truncate pr-2">{call.contactName}</h4>
-                                    <span className="text-[10px] font-mono text-gray-500">{call.phoneNumber}</span>
+                                    <span className="text-[10px] font-mono text-[#d1d5db]">{call.phoneNumber}</span>
                                 </div>
 
                                 <div className="pl-3 space-y-2">
@@ -189,7 +189,7 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
                                             }`}>{call.status}</span>
                                     </div>
 
-                                    <div className="flex items-center gap-2 text-[10px] font-mono text-gray-400">
+                                    <div className="flex items-center gap-2 text-[10px] font-mono text-[#e5e7eb]">
                                         <i className="fas fa-stopwatch"></i>
                                         <span>{Math.floor(call.duration / 60).toString().padStart(2, '0')}:{(call.duration % 60).toString().padStart(2, '0')}</span>
                                     </div>
@@ -218,7 +218,7 @@ export const BatchMonitor: React.FC<BatchMonitorProps> = ({ queue, concurrency, 
                                     {pendingQueue.length > 0 && !isPaused ? (
                                         <>
                                             <i className="fas fa-circle-notch fa-spin text-indigo-500 mb-2"></i>
-                                            <p className="text-[10px] font-bold uppercase text-gray-500">Allocating Line...</p>
+                                            <p className="text-[10px] font-bold uppercase text-[#d1d5db]">Allocating Line...</p>
                                         </>
                                     ) : (
                                         <p className="text-[10px] font-bold uppercase text-gray-600">Line Standby</p>

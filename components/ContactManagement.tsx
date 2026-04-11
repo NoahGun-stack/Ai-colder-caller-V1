@@ -207,21 +207,21 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
     return (
         <div className="h-full flex flex-row overflow-hidden">
             {/* Left Area: Table List */}
-            <div className={`flex-1 flex flex-col min-w-0 transition-all ${selectedContact ? 'border-r border-[#e5e7eb]' : ''}`}>
-                <div className="p-4 border-b border-[#e5e7eb] flex items-center justify-between bg-white">
+            <div className={`flex-1 flex flex-col min-w-0 transition-all ${selectedContact ? 'border-r border-[#404040]' : ''}`}>
+                <div className="p-4 border-b border-[#404040] flex items-center justify-between bg-[#080808]">
                     <div className="flex items-center gap-4">
                         <div className="relative w-64">
-                            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] text-[11px]"></i>
+                            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#d1d5db] text-[11px]"></i>
                             <input
                                 type="text"
                                 placeholder="Search contacts..."
-                                className="w-full pl-8 pr-4 py-2 border border-[#e5e7eb] text-[12px] outline-none focus:border-[#4338ca] transition-all"
+                                className="w-full bg-[#1a1a1a] text-white pl-8 pr-4 py-2 border border-[#404040] text-[12px] outline-none focus:border-[#d4a843] transition-all"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
                         <select
-                            className="border border-[#e5e7eb] text-[11px] font-bold uppercase text-[#111827] px-2 py-2 outline-none"
+                            className="bg-[#1a1a1a] border border-[#404040] text-[11px] font-bold uppercase text-white px-2 py-2 outline-none"
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value as any)}
                         >
@@ -229,14 +229,14 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             <option value="contacted">Contacted</option>
                             <option value="uncontacted">Uncontacted</option>
                         </select>
-                        <span className="text-[11px] font-bold text-[#6b7280] uppercase tracking-wider bg-[#f3f4f6] px-2 py-1 rounded-sm">
+                        <span className="text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider bg-[#262626] px-2 py-1 rounded-sm">
                             {filteredContacts.length} Visible
                         </span>
 
                         {/* Bulk Select Input */}
                         <div className="flex items-center ml-4">
-                            <div className="flex items-center border border-[#e5e7eb] bg-white rounded-sm h-[34px] overflow-hidden group hover:border-[#4338ca] transition-colors">
-                                <span className="bg-[#f9fafb] text-[10px] font-bold text-[#6b7280] uppercase px-2 h-full flex items-center border-r border-[#e5e7eb]">
+                            <div className="flex items-center border border-[#404040] bg-[#080808] rounded-sm h-[34px] overflow-hidden group hover:border-[#d4a843] transition-colors">
+                                <span className="bg-[#262626] text-[10px] font-bold text-[#d1d5db] uppercase px-2 h-full flex items-center border-r border-[#404040]">
                                     Select Top
                                 </span>
                                 <input
@@ -250,7 +250,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                             setSelectTopN(val);
                                         }
                                     }}
-                                    className="w-12 px-2 text-[11px] font-bold text-center outline-none h-full text-[#111827] placeholder-gray-300"
+                                    className="w-12 bg-[#1a1a1a] px-2 text-[11px] font-bold text-center outline-none h-full text-white placeholder-[#888888]"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' && selectTopN) {
                                             const val = parseInt(selectTopN);
@@ -273,7 +273,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                                 setSelectTopN('');
                                             }
                                         }}
-                                        className="h-full px-2 text-indigo-600 hover:bg-indigo-50 border-l border-[#e5e7eb]"
+                                        className="h-full px-2 text-[#d4a843] hover:bg-indigo-50 border-l border-[#404040]"
                                     >
                                         <i className="fas fa-check text-[10px]"></i>
                                     </button>
@@ -291,7 +291,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         />
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="px-3 py-2 border border-[#e5e7eb] text-[11px] font-bold uppercase text-[#111827] hover:bg-[#f8f9fb]"
+                            className="px-3 py-2 border border-[#404040] text-[11px] font-bold uppercase text-white hover:bg-[#1a1a1a]"
                         >
                             Import CSV
                         </button>
@@ -299,7 +299,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             <>
                                 <button
                                     onClick={initiatePowerDial}
-                                    className="px-3 py-2 bg-indigo-600 text-white text-[11px] font-bold uppercase hover:bg-indigo-700 shadow-sm border border-transparent animate-pulse"
+                                    className="px-3 py-2 bg-[#d4a843] text-white text-[11px] font-bold uppercase hover:bg-indigo-700 shadow-sm border border-transparent animate-pulse"
                                 >
                                     <i className="fas fa-play mr-2 text-[10px]"></i>
                                     {selectedIds.size > 1 ? `Batch Dial (${selectedIds.size})` : 'Power Dial'}
@@ -316,7 +316,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
 
                         <button
                             onClick={handleAddContact}
-                            className="px-3 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase hover:bg-[#3730a3] transition-colors"
+                            className="px-3 py-2 bg-[#d4a843] text-white text-[11px] font-bold uppercase hover:bg-[#e8c06a] transition-colors"
                         >
                             Add Contact
                         </button>
@@ -326,7 +326,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                 <div className="flex-1 overflow-y-auto">
                     <table className="w-full table-dense">
                         <thead>
-                            <tr className="bg-[#f8f9fb]">
+                            <tr className="bg-[#1a1a1a]">
                                 <th className="w-8 px-4 text-left">
                                     <input
                                         type="checkbox"
@@ -339,20 +339,20 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                         onChange={handleSelectAll}
                                     />
                                 </th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Name</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Phone Number</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Location</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Status</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Conversation</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Attempts</th>
-                                <th className="px-4 py-3 text-[11px] font-bold text-[#6b7280] uppercase tracking-wider text-left">Last Contact</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider text-left">Name</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider text-left">Phone Number</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider text-left">Location</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider text-left">Status</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider text-left">Conversation</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider text-left">Attempts</th>
+                                <th className="px-4 py-3 text-[11px] font-bold text-[#d1d5db] uppercase tracking-wider text-left">Last Contact</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredContacts.map((contact) => (
                                 <tr
                                     key={contact.id}
-                                    className={`hover:bg-[#f8f9fb] transition-colors border-b border-[#f3f4f6] ${selectedContact?.id === contact.id ? 'bg-[#f5f7ff]' : ''}`}
+                                    className={`hover:bg-[#1a1a1a] transition-colors border-b border-[#f3f4f6] ${selectedContact?.id === contact.id ? 'bg-[#f5f7ff]' : ''}`}
                                 >
                                     <td className="w-8 px-4 py-3">
                                         <input
@@ -363,7 +363,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                         />
                                     </td>
                                     <td
-                                        className="px-4 py-3 font-bold text-[#111827] text-[12px] cursor-pointer hover:text-indigo-600 transition-colors"
+                                        className="px-4 py-3 font-bold text-white text-[12px] cursor-pointer hover:text-[#d4a843] transition-colors"
                                         onClick={() => {
                                             setSelectedContact(contact);
                                             contactsService.getCallLogs(contact.id).then(setCallLogs);
@@ -375,13 +375,13 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                         ) : (contact.totalCalls || 0) === 0 ? (
                                             <span className="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold uppercase rounded-sm border border-blue-100">Uncontacted</span>
                                         ) : (
-                                            <span className="ml-2 px-1.5 py-0.5 bg-gray-50 text-gray-500 text-[9px] font-bold uppercase rounded-sm border border-gray-100">Contacted</span>
+                                            <span className="ml-2 px-1.5 py-0.5 bg-[#1a1a1a] text-[#d1d5db] text-[9px] font-bold uppercase rounded-sm border border-gray-100">Contacted</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-[#6b7280] font-mono text-[11px]">{contact.phoneNumber}</td>
-                                    <td className="px-4 py-3 text-[#6b7280] text-[11px] truncate max-w-[200px]">{contact.address}, {contact.city}</td>
+                                    <td className="px-4 py-3 text-[#d1d5db] font-mono text-[11px]">{contact.phoneNumber}</td>
+                                    <td className="px-4 py-3 text-[#d1d5db] text-[11px] truncate max-w-[200px]">{contact.address}, {contact.city}</td>
                                     <td className="px-4 py-3">
-                                        <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase rounded-sm ${contact.status === LeadStatus.APPOINTMENT_BOOKED ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#e5e7eb] text-[#6b7280]'
+                                        <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase rounded-sm ${contact.status === LeadStatus.APPOINTMENT_BOOKED ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#404040] text-[#d1d5db]'
                                             }`}>
                                             {contact.status}
                                         </span>
@@ -395,8 +395,8 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                             <span className="text-gray-300 text-[10px]">-</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 font-bold text-[#111827] text-[12px] pl-8">{contact.totalCalls || 0}</td>
-                                    <td className="px-4 py-3 text-[#6b7280] text-[11px]">
+                                    <td className="px-4 py-3 font-bold text-white text-[12px] pl-8">{contact.totalCalls || 0}</td>
+                                    <td className="px-4 py-3 text-[#d1d5db] text-[11px]">
                                         {contact.lastContactedAt ? new Date(contact.lastContactedAt).toLocaleDateString() : '-'}
                                     </td>
                                 </tr>
@@ -406,8 +406,8 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                     {contacts.length === 0 && (
                         <div className="flex flex-col items-center justify-center p-12 text-center">
                             <i className="fas fa-address-book text-3xl text-[#d1d5db] mb-3"></i>
-                            <p className="text-[12px] font-bold text-[#111827]">No contacts found</p>
-                            <p className="text-[11px] text-[#6b7280]">Import a CSV or add a contact to get started.</p>
+                            <p className="text-[12px] font-bold text-white">No contacts found</p>
+                            <p className="text-[11px] text-[#d1d5db]">Import a CSV or add a contact to get started.</p>
                         </div>
                     )}
                 </div>
@@ -426,21 +426,21 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
             {/* Right Area: Context Detail Panel (Persistent) */}
             {
                 selectedContact && (
-                    <div className="w-[380px] shrink-0 flex flex-col bg-white overflow-hidden shadow-2xl border-l border-[#e5e7eb]">
-                        <div className="p-5 border-b border-[#e5e7eb] flex items-center justify-between bg-[#f8f9fb]">
-                            <h3 className="text-sm font-bold text-[#111827] uppercase tracking-wide">Contact Context</h3>
-                            <button onClick={() => setSelectedContact(null)} className="text-[#6b7280] hover:text-[#111827]"><i className="fas fa-times"></i></button>
+                    <div className="w-[380px] shrink-0 flex flex-col bg-[#080808] overflow-hidden shadow-2xl border-l border-[#404040]">
+                        <div className="p-5 border-b border-[#404040] flex items-center justify-between bg-[#1a1a1a]">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wide">Contact Context</h3>
+                            <button onClick={() => setSelectedContact(null)} className="text-[#d1d5db] hover:text-white"><i className="fas fa-times"></i></button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-8">
                             <section>
                                 <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-12 h-12 bg-[#f5f7ff] border border-[#e0e7ff] text-[#4338ca] flex items-center justify-center font-bold text-lg rounded-full">
+                                    <div className="w-12 h-12 bg-[#f5f7ff] border border-[#e0e7ff] text-[#d4a843] flex items-center justify-center font-bold text-lg rounded-full">
                                         {selectedContact.firstName[0]}{selectedContact.lastName[0]}
                                     </div>
                                     <div>
-                                        <h4 className="text-base font-bold text-[#111827]">{selectedContact.firstName} {selectedContact.lastName}</h4>
-                                        <p className="text-xs text-[#6b7280] font-bold uppercase tracking-wider">{selectedContact.phoneNumber}</p>
+                                        <h4 className="text-base font-bold text-white">{selectedContact.firstName} {selectedContact.lastName}</h4>
+                                        <p className="text-xs text-[#d1d5db] font-bold uppercase tracking-wider">{selectedContact.phoneNumber}</p>
                                     </div>
                                 </div>
 
@@ -449,7 +449,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => onStartCall(selectedContact, activeCampaign)}
-                                        className="flex-1 py-2 bg-[#4338ca] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-[#3730a3] transition-colors rounded-sm"
+                                        className="flex-1 py-2 bg-[#d4a843] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-[#e8c06a] transition-colors rounded-sm"
                                     >
                                         Initiate Outbound
                                     </button>
@@ -457,47 +457,47 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             </section>
 
                             <section className="space-y-4">
-                                <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Operational Data</h5>
+                                <h5 className="text-[10px] font-black text-[#d1d5db] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Operational Data</h5>
                                 <div className="grid grid-cols-2 gap-y-4 text-[11px]">
                                     <div>
-                                        <p className="text-[#6b7280] mb-1">Status</p>
-                                        <p className="font-bold text-[#111827] uppercase">{selectedContact.status}</p>
+                                        <p className="text-[#d1d5db] mb-1">Status</p>
+                                        <p className="font-bold text-white uppercase">{selectedContact.status}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[#6b7280] mb-1">Source</p>
-                                        <p className="font-bold text-[#111827] uppercase">CSV Import</p>
+                                        <p className="text-[#d1d5db] mb-1">Source</p>
+                                        <p className="font-bold text-white uppercase">CSV Import</p>
                                     </div>
                                     <div className="col-span-2">
-                                        <p className="text-[#6b7280] mb-1">Primary Location</p>
-                                        <p className="font-bold text-[#111827] uppercase">{selectedContact.address}</p>
-                                        <p className="text-[#6b7280] text-[10px]">{selectedContact.city}, {selectedContact.state}</p>
+                                        <p className="text-[#d1d5db] mb-1">Primary Location</p>
+                                        <p className="font-bold text-white uppercase">{selectedContact.address}</p>
+                                        <p className="text-[#d1d5db] text-[10px]">{selectedContact.city}, {selectedContact.state}</p>
                                     </div>
                                 </div>
                             </section>
 
                             <section className="space-y-4">
-                                <h5 className="text-[10px] font-black text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Call Ledger</h5>
+                                <h5 className="text-[10px] font-black text-[#d1d5db] uppercase tracking-widest border-b border-[#f3f4f6] pb-1">Call Ledger</h5>
                                 <div className="space-y-3">
                                     {callLogs.length === 0 ? (
-                                        <p className="text-[11px] text-[#6b7280] italic py-2">No call history available.</p>
+                                        <p className="text-[11px] text-[#d1d5db] italic py-2">No call history available.</p>
                                     ) : (
                                         callLogs.map((log) => (
-                                            <div key={log.id} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#f8f9fb] rounded-sm group hover:border-red-100 transition-colors">
+                                            <div key={log.id} className="flex items-center justify-between p-3 border border-[#f3f4f6] bg-[#1a1a1a] rounded-sm group hover:border-red-100 transition-colors">
                                                 <div>
-                                                    <p className="text-[11px] font-bold text-[#111827]">
+                                                    <p className="text-[11px] font-bold text-white">
                                                         {log.outcome === 'Connected' ? 'Connected Call' : 'Outbound Attempt'}
                                                     </p>
-                                                    <p className="text-[10px] text-[#6b7280]">
+                                                    <p className="text-[10px] text-[#d1d5db]">
                                                         {new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-right">
-                                                        <span className={`block text-[10px] font-bold uppercase ${log.outcome === 'Connected' ? 'text-green-600' : 'text-[#6b7280]'}`}>
+                                                        <span className={`block text-[10px] font-bold uppercase ${log.outcome === 'Connected' ? 'text-green-600' : 'text-[#d1d5db]'}`}>
                                                             {log.outcome || 'Unknown'}
                                                         </span>
                                                         {log.duration > 0 && (
-                                                            <span className="text-[9px] text-[#9ca3af] font-mono">{Math.floor(log.duration / 60)}m {log.duration % 60}s</span>
+                                                            <span className="text-[9px] text-[#e5e7eb] font-mono">{Math.floor(log.duration / 60)}m {log.duration % 60}s</span>
                                                         )}
                                                     </div>
                                                     <button
@@ -529,7 +529,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                 footer={(
                     <button
                         onClick={submitAddContact}
-                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded hover:bg-indigo-700"
+                        className="px-4 py-2 bg-[#d4a843] text-white text-sm font-bold rounded hover:bg-indigo-700"
                     >
                         Save Contact
                     </button>
@@ -541,7 +541,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             <label className="block text-xs font-bold text-gray-700 uppercase mb-1">First Name</label>
                             <input
                                 type="text"
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                                className="w-full bg-[#1a1a1a] text-white border border-[#525252] rounded px-3 py-2 text-sm focus:border-[#d4a843] outline-none"
                                 value={addContactForm.firstName}
                                 onChange={e => setAddContactForm({ ...addContactForm, firstName: e.target.value })}
                             />
@@ -550,7 +550,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Last Name</label>
                             <input
                                 type="text"
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                                className="w-full bg-[#1a1a1a] text-white border border-[#525252] rounded px-3 py-2 text-sm focus:border-[#d4a843] outline-none"
                                 value={addContactForm.lastName}
                                 onChange={e => setAddContactForm({ ...addContactForm, lastName: e.target.value })}
                             />
@@ -560,7 +560,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Phone Number</label>
                         <input
                             type="tel"
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                            className="w-full bg-[#1a1a1a] text-white border border-[#525252] rounded px-3 py-2 text-sm focus:border-[#d4a843] outline-none"
                             value={addContactForm.phoneNumber}
                             onChange={e => setAddContactForm({ ...addContactForm, phoneNumber: e.target.value })}
                         />
@@ -569,7 +569,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Address</label>
                         <input
                             type="text"
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                            className="w-full bg-[#1a1a1a] text-white border border-[#525252] rounded px-3 py-2 text-sm focus:border-[#d4a843] outline-none"
                             value={addContactForm.address}
                             onChange={e => setAddContactForm({ ...addContactForm, address: e.target.value })}
                         />
@@ -589,14 +589,14 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             onStartPowerDial?.(powerDialConfig.contacts, false, true, powerDialConfig.limit, powerDialConfig.campaign);
                             setIsPowerDialModalOpen(false);
                         }}
-                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded hover:bg-indigo-700 w-full"
+                        className="px-4 py-2 bg-[#d4a843] text-white text-sm font-bold rounded hover:bg-indigo-700 w-full"
                     >
                         Start Dialing
                     </button>
                 )}
             >
                 <p className="text-sm text-gray-600 mb-4">
-                    You are about to start a parallel dialing session for <strong className="text-gray-900">{powerDialConfig.contacts.length} contacts</strong>.
+                    You are about to start a parallel dialing session for <strong className="text-white">{powerDialConfig.contacts.length} contacts</strong>.
                 </p>
                 <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Max Concurrent Calls</label>
@@ -604,11 +604,11 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                         type="number"
                         min="1"
                         max="10"
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                        className="w-full bg-[#1a1a1a] text-white border border-[#525252] rounded px-3 py-2 text-sm focus:border-[#d4a843] outline-none"
                         value={powerDialConfig.limit}
                         onChange={e => setPowerDialConfig({ ...powerDialConfig, limit: parseInt(e.target.value) || 1 })}
                     />
-                    <p className="text-[10px] text-gray-500 mt-1">Recommended: 3-5 for best results.</p>
+                    <p className="text-[10px] text-[#d1d5db] mt-1">Recommended: 3-5 for best results.</p>
                 </div>
 
                 <div className="mt-4">
@@ -625,11 +625,11 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                 key={camp.id}
                                 onClick={() => setPowerDialConfig({ ...powerDialConfig, campaign: camp.id as any })}
                                 className={`flex items-center gap-3 px-3 py-2 border rounded-sm transition-all text-left ${powerDialConfig.campaign === camp.id
-                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                                    ? 'border-[#d4a843] bg-indigo-50 text-indigo-700'
+                                    : 'border-[#404040] hover:border-[#525252] text-gray-700'
                                     }`}
                             >
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${powerDialConfig.campaign === camp.id ? 'bg-indigo-200' : 'bg-gray-100'
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${powerDialConfig.campaign === camp.id ? 'bg-indigo-200' : 'bg-[#262626]'
                                     }`}>
                                     <i className={`fas ${camp.icon} text-xs`}></i>
                                 </div>
@@ -637,7 +637,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                     <p className="text-[11px] font-bold uppercase">{camp.label}</p>
                                 </div>
                                 {powerDialConfig.campaign === camp.id && (
-                                    <i className="fas fa-check ml-auto text-indigo-600 text-xs"></i>
+                                    <i className="fas fa-check ml-auto text-[#d4a843] text-xs"></i>
                                 )}
                             </button>
                         ))}
@@ -664,8 +664,8 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                         <i className="fas fa-trash-alt text-red-600 text-lg"></i>
                     </div>
-                    <p className="text-sm text-gray-500">
-                        Are you sure you want to delete <strong className="text-gray-900">{selectedIds.size} contacts</strong>?
+                    <p className="text-sm text-[#d1d5db]">
+                        Are you sure you want to delete <strong className="text-white">{selectedIds.size} contacts</strong>?
                         This action cannot be undone.
                     </p>
                 </div>
@@ -686,7 +686,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                                 setIsLogDeleteModalOpen(false);
                                 setLogToDelete(null);
                             }}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-[#080808] border border-[#525252] rounded-md hover:bg-[#1a1a1a]"
                         >
                             Cancel
                         </button>
@@ -709,7 +709,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                     </>
                 }
             >
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#d1d5db]">
                     Are you sure you want to delete this call log? This action cannot be undone.
                 </p>
             </Modal>

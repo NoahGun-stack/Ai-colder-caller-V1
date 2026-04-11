@@ -191,7 +191,7 @@ const App: React.FC = () => {
         <div className="fixed top-4 left-4 z-50">
           <button
             onClick={() => setShowLanding(true)}
-            className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium text-sm bg-white/80 px-4 py-2 rounded-full border border-gray-200"
+            className="flex items-center gap-2 text-[#d1d5db] hover:text-[#d4a843] transition-colors font-medium text-sm bg-[#080808]/80 px-4 py-2 rounded-full border border-[#404040]"
           >
             <i className="fas fa-arrow-left"></i> Back to Home
           </button>
@@ -203,11 +203,11 @@ const App: React.FC = () => {
 
   if (passwordRecoveryMode) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f8f9fb]">
-        <div className="w-full max-w-md bg-white p-8 border border-[#e5e7eb] shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-[#1a1a1a]">
+        <div className="w-full max-w-md bg-[#080808] p-8 border border-[#404040] shadow-sm">
           <div className="mb-6 text-center">
-            <img src="/neuroline_logo.png" alt="NeuroLine" className="h-8 mx-auto mb-2" />
-            <p className="text-sm text-[#6b7280] mt-2">Update your password</p>
+            <div className="text-[#d4a843] font-black text-2xl tracking-tighter mb-2">HARLOW<span className="font-light">AI</span>GROUP</div>
+            <p className="text-sm text-[#d1d5db] mt-2">Update your password</p>
           </div>
           <form
             onSubmit={async (e) => {
@@ -224,10 +224,10 @@ const App: React.FC = () => {
             className="space-y-4"
           >
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">New Password</label>
-              <input type="password" name="password" required className="w-full border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#4338ca] outline-none" placeholder="••••••••" />
+              <label className="block text-xs font-medium text-white mb-1">New Password</label>
+              <input type="password" name="password" required className="w-full border border-[#525252] px-3 py-2 text-sm focus:border-[#d4a843] outline-none" placeholder="••••••••" />
             </div>
-            <button type="submit" className="w-full bg-[#4338ca] hover:bg-[#3730a3] text-white font-medium py-2.5 text-sm">Update Password</button>
+            <button type="submit" className="w-full bg-[#d4a843] hover:bg-[#e8c06a] text-white font-medium py-2.5 text-sm">Update Password</button>
           </form>
         </div>
       </div>
@@ -235,11 +235,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-screen overflow-hidden bg-[#080808]">
       {/* Navigation Sidebar */}
-      <aside className="w-[200px] bg-[#f8f9fb] border-r border-[#e5e7eb] flex flex-col shrink-0">
-        <div className="h-14 flex items-center px-5 border-b border-[#e5e7eb]">
-          <img src="/neuroline_logo.png" alt="NeuroLine" className="h-6" />
+      <aside className="w-[200px] bg-[#1a1a1a] border-r border-[#404040] flex flex-col shrink-0">
+        <div className="h-14 flex items-center px-5 border-b border-[#404040]">
+          <div className="text-[#d4a843] font-black text-lg tracking-tighter">HARLOW<span className="font-light">AI</span>GROUP</div>
         </div>
 
         <nav className="flex-1 py-4 overflow-y-auto">
@@ -247,7 +247,7 @@ const App: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as Tab)}
-              className={`w-full flex items-center gap-3 px-5 py-3 text-[12px] font-medium transition-all ${activeTab === item.id ? 'sidebar-item-active' : 'text-[#6b7280] hover:bg-[#f3f4f6]'}`}
+              className={`w-full flex items-center gap-3 px-5 py-3 text-[12px] font-medium transition-all ${activeTab === item.id ? 'sidebar-item-active' : 'text-[#d1d5db] hover:bg-[#262626]'}`}
             >
               <i className={`fas ${item.icon} w-4 text-center opacity-70`}></i>
               {item.label}
@@ -255,17 +255,17 @@ const App: React.FC = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[#e5e7eb]">
+        <div className="p-4 border-t border-[#404040]">
           <button
             onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 px-2 py-2 text-[12px] font-medium mb-4 ${activeTab === 'settings' ? 'text-[#4338ca]' : 'text-[#6b7280]'}`}
+            className={`w-full flex items-center gap-3 px-2 py-2 text-[12px] font-medium mb-4 ${activeTab === 'settings' ? 'text-[#d4a843]' : 'text-[#d1d5db]'}`}
           >
             <i className="fas fa-cog w-4 text-center opacity-70"></i>
             Settings
           </button>
-          <div className="flex items-center gap-2 p-2 bg-white border border-[#e5e7eb]">
-            <div className="w-6 h-6 bg-[#4338ca] text-white flex items-center justify-center font-bold text-[9px]">AR</div>
-            <span className="text-[11px] font-bold text-[#111827] truncate">Prime Shield</span>
+          <div className="flex items-center gap-2 p-2 bg-[#080808] border border-[#404040]">
+            <div className="w-6 h-6 bg-[#d4a843] text-white flex items-center justify-center font-bold text-[9px]">AR</div>
+            <span className="text-[11px] font-bold text-white truncate">Prime Shield</span>
           </div>
           <button
             onClick={() => supabase.auth.signOut()}
@@ -279,9 +279,9 @@ const App: React.FC = () => {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 bg-white border-b border-[#e5e7eb] flex items-center justify-between px-6 shrink-0">
+        <header className="h-14 bg-[#080808] border-b border-[#404040] flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-4">
-            <h2 className="text-sm font-bold text-[#111827] uppercase tracking-wide">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wide">
               {activeTab === 'appointments' ? null : (activeTab === 'calls' ? 'Prospect Outreach' : activeTab.replace('-', ' '))}
             </h2>
           </div>
@@ -348,8 +348,8 @@ const App: React.FC = () => {
           {activeTab === 'contacts' && (
             <div className="h-full flex flex-col items-center justify-center text-center p-20">
               <i className="fas fa-server text-3xl text-[#d1d5db] mb-4"></i>
-              <h3 className="text-sm font-bold text-[#111827] uppercase">Database Connection Active</h3>
-              <p className="text-[11px] text-[#6b7280] mt-1 uppercase tracking-wider">Retrieving operational data for contacts...</p>
+              <h3 className="text-sm font-bold text-white uppercase">Database Connection Active</h3>
+              <p className="text-[11px] text-[#d1d5db] mt-1 uppercase tracking-wider">Retrieving operational data for contacts...</p>
             </div>
           )}
         </main>

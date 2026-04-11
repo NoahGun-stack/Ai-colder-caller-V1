@@ -63,10 +63,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
     }
 
     return (
-        <div className="h-full bg-[#f8f9fb] p-8 overflow-y-auto animate-fadeIn">
+        <div className="h-full bg-[#1a1a1a] p-8 overflow-y-auto animate-fadeIn">
             <header className="mb-8">
-                <h2 className="text-2xl font-bold text-[#111827] uppercase tracking-tight">User Administration</h2>
-                <p className="text-sm text-[#6b7280] font-bold uppercase tracking-widest mt-1">Manage Account Roles and AI Agent Assignments</p>
+                <h2 className="text-2xl font-bold text-white uppercase tracking-tight">User Administration</h2>
+                <p className="text-sm text-[#d1d5db] font-bold uppercase tracking-widest mt-1">Manage Account Roles and AI Agent Assignments</p>
             </header>
 
             {error && (
@@ -75,40 +75,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                 </div>
             )}
 
-            <div className="bg-white border border-[#e5e7eb] shadow-sm rounded-sm overflow-hidden">
+            <div className="bg-[#080808] border border-[#404040] shadow-sm rounded-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-[#f3f4f6] border-b border-[#e5e7eb]">
-                                <th className="px-6 py-4 text-[11px] font-black text-[#6b7280] uppercase tracking-widest">User Email</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-[#6b7280] uppercase tracking-widest">System Role</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-[#6b7280] uppercase tracking-widest">Assigned Agent (Campaign)</th>
-                                <th className="px-6 py-4 text-[11px] font-black text-[#6b7280] uppercase tracking-widest">Status</th>
+                            <tr className="bg-[#262626] border-b border-[#404040]">
+                                <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">User Email</th>
+                                <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">System Role</th>
+                                <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">Assigned Agent (Campaign)</th>
+                                <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">Status</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#e5e7eb]">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">Loading users...</td>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-[#d1d5db]">Loading users...</td>
                                 </tr>
                             ) : profiles.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">No users found.</td>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-[#d1d5db]">No users found.</td>
                                 </tr>
                             ) : (
                                 profiles.map((profile) => (
-                                    <tr key={profile.id} className="hover:bg-[#f9fafb] transition-colors">
+                                    <tr key={profile.id} className="hover:bg-[#262626] transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="text-sm font-bold text-[#111827]">{profile.email}</div>
-                                            <div className="text-[10px] text-[#9ca3af] font-mono">{profile.id}</div>
+                                            <div className="text-sm font-bold text-white">{profile.email}</div>
+                                            <div className="text-[10px] text-[#e5e7eb] font-mono">{profile.id}</div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <select
                                                 value={profile.role}
                                                 onChange={(e) => updateProfile(profile.id, { role: e.target.value as 'admin' | 'user' })}
                                                 className={`text-[11px] font-bold uppercase px-2 py-1 rounded border outline-none cursor-pointer ${profile.role === 'admin'
-                                                    ? 'bg-purple-100 text-purple-800 border-purple-200'
-                                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                    ? 'bg-[#1a1a1a] text-[#c084fc] border-[#525252]'
+                                                    : 'bg-[#262626] text-gray-700 border-[#404040]'
                                                     }`}
                                             >
                                                 <option value="user">Standard User</option>
@@ -146,7 +146,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                 </div>
             </div>
 
-            <div className="mt-12 bg-white border border-[#e5e7eb] shadow-sm rounded-sm p-6">
+            <div className="mt-12 bg-[#080808] border border-[#404040] shadow-sm rounded-sm p-6">
                 {/* Passing setProps as no-op for now unless we lift state, currently Configurator manages its own state */}
                 <CampaignConfigurator />
             </div>

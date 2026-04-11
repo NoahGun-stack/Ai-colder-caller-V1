@@ -42,11 +42,12 @@ const Auth: React.FC = () => {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[#f8f9fb]">
-            <div className="w-full max-w-md bg-white p-8 border border-[#e5e7eb] shadow-sm">
+        <div className="flex min-h-screen items-center justify-center bg-[#1a1a1a]">
+            <div className="w-full max-w-md bg-[#080808] p-8 border border-[#404040] shadow-sm">
                 <div className="mb-6 text-center">
-                    <img src="/neuroline_logo.png" alt="NeuroLine" className="h-8 mx-auto mb-2" />
-                    <p className="text-sm text-[#6b7280] mt-2">
+                    <div className="text-[#d4a843] font-black text-2xl tracking-tighter mb-2">HARLOW<span className="font-light">AI</span>GROUP</div>
+                    <h1 className="text-xl font-bold text-white">Welcome Back</h1>
+                    <p className="text-sm text-[#d1d5db] mt-2">
                         {view === 'sign_up' ? 'Create your account' :
                             view === 'forgot_password' ? 'Reset your password' :
                                 'Sign in to your account'}
@@ -61,13 +62,13 @@ const Auth: React.FC = () => {
 
                 <form onSubmit={handleAuth} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-medium text-[#374151] mb-1">Email address</label>
+                        <label className="block text-xs font-medium text-white mb-1">Email address</label>
                         <input
                             type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] outline-none transition-all"
+                            className="w-full bg-[#1a1a1a] text-white border border-[#525252] px-3 py-2 text-sm focus:border-[#d4a843] focus:ring-1 focus:ring-[#4338ca] outline-none transition-all"
                             placeholder="you@example.com"
                         />
                     </div>
@@ -75,7 +76,7 @@ const Auth: React.FC = () => {
                     {view !== 'forgot_password' && (
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <label className="block text-xs font-medium text-[#374151]">Password</label>
+                                <label className="block text-xs font-medium text-white">Password</label>
                                 {view === 'sign_in' && (
                                     <button
                                         type="button"
@@ -83,7 +84,7 @@ const Auth: React.FC = () => {
                                             setView('forgot_password');
                                             setMessage(null);
                                         }}
-                                        className="text-xs text-[#4338ca] hover:underline"
+                                        className="text-xs text-[#d4a843] hover:underline"
                                     >
                                         Forgot password?
                                     </button>
@@ -94,7 +95,7 @@ const Auth: React.FC = () => {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full border border-[#d1d5db] px-3 py-2 text-sm focus:border-[#4338ca] focus:ring-1 focus:ring-[#4338ca] outline-none transition-all"
+                                className="w-full bg-[#1a1a1a] text-white border border-[#525252] px-3 py-2 text-sm focus:border-[#d4a843] focus:ring-1 focus:ring-[#4338ca] outline-none transition-all"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -103,7 +104,7 @@ const Auth: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-[#4338ca] hover:bg-[#3730a3] text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
+                        className="w-full bg-[#d4a843] hover:bg-[#e8c06a] text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                     >
                         {loading ? (
                             <i className="fas fa-circle-notch fa-spin"></i>
@@ -122,7 +123,7 @@ const Auth: React.FC = () => {
                             else setView('sign_in');
                             setMessage(null);
                         }}
-                        className="text-xs text-[#4338ca] font-medium hover:underline"
+                        className="text-xs text-[#d4a843] font-medium hover:underline"
                     >
                         {view === 'sign_in' ? "Don't have an account? Sign up" : "Back to sign in"}
                     </button>

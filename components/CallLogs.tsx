@@ -144,25 +144,25 @@ export const CallLogs: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#f8f9fb]">
-            <header className="p-6 border-b border-[#e5e7eb] bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+        <div className="flex flex-col h-full bg-[#1a1a1a]">
+            <header className="p-6 border-b border-[#404040] bg-[#080808] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
                 <div>
-                    <h2 className="text-xl font-bold text-[#111827]">Call Ledger</h2>
-                    <p className="text-sm text-[#6b7280]">Review recordings and AI analysis</p>
+                    <h2 className="text-xl font-bold text-white">Call Ledger</h2>
+                    <p className="text-sm text-[#d1d5db]">Review recordings and AI analysis</p>
                 </div>
 
                 <div className="flex flex-1 w-full sm:w-auto sm:justify-end gap-3">
                     {/* Search Bar */}
                     <div className="relative flex-1 sm:max-w-xs">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i className="fas fa-search text-gray-400"></i>
+                            <i className="fas fa-search text-[#e5e7eb]"></i>
                         </div>
                         <input
                             type="text"
                             placeholder="Search name or phone..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                            className="block w-full text-white pl-10 pr-3 py-2 border border-[#525252] rounded-md leading-5 bg-[#080808] placeholder-[#888888] focus:outline-none focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] sm:text-sm"
                         />
                     </div>
 
@@ -170,7 +170,7 @@ export const CallLogs: React.FC = () => {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as any)}
-                        className="block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                        className="block pl-3 pr-10 py-2 text-white bg-[#080808] text-base border border-[#525252] focus:outline-none focus:ring-[#d4a843] focus:border-[#d4a843] sm:text-sm rounded-md"
                     >
                         <option value="all">All Outcomes</option>
                         <option value="completed">Completed (Connected)</option>
@@ -183,7 +183,7 @@ export const CallLogs: React.FC = () => {
 
                     <button
                         onClick={fetchLogs}
-                        className="p-2 text-gray-400 hover:text-gray-500"
+                        className="p-2 text-[#e5e7eb] hover:text-[#d1d5db]"
                         title="Refresh"
                     >
                         <i className="fas fa-sync-alt"></i>
@@ -193,28 +193,28 @@ export const CallLogs: React.FC = () => {
 
             <div className="flex-1 overflow-auto p-6">
                 {loading ? (
-                    <div className="p-8 text-center text-gray-500">Loading call history...</div>
+                    <div className="p-8 text-center text-[#d1d5db]">Loading call history...</div>
                 ) : logs.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="mx-auto h-12 w-12 text-gray-400">
+                        <div className="mx-auto h-12 w-12 text-[#e5e7eb]">
                             <i className="fas fa-search-minus text-4xl"></i>
                         </div>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">No calls found</h3>
-                        <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
+                        <h3 className="mt-2 text-sm font-medium text-white">No calls found</h3>
+                        <p className="mt-1 text-sm text-[#d1d5db]">Try adjusting your search or filters.</p>
                         {(searchQuery || statusFilter !== 'all') && (
                             <button
                                 onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
-                                className="mt-3 text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                                className="mt-3 text-[#d4a843] hover:text-indigo-500 text-sm font-medium"
                             >
                                 Clear filters
                             </button>
                         )}
                     </div>
                 ) : (
-                    <div className="bg-white shadow overflow-hidden sm:rounded-md border border-gray-200">
+                    <div className="bg-[#080808] shadow overflow-hidden sm:rounded-md border border-[#404040]">
                         <ul className="divide-y divide-gray-200">
                             {logs.map((log) => (
-                                <li key={log.id} className="hover:bg-gray-50 transition-colors">
+                                <li key={log.id} className="hover:bg-[#1a1a1a] transition-colors">
                                     <div className="px-4 py-4 sm:px-6">
                                         <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}>
                                             <div className="flex items-center gap-4">
@@ -224,15 +224,15 @@ export const CallLogs: React.FC = () => {
                                                     {log.contact ? log.contact.firstName[0] : '?'}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-indigo-600 truncate">
+                                                    <p className="text-sm font-bold text-[#d4a843] truncate">
                                                         {log.contact ? `${log.contact.firstName} ${log.contact.lastName}` : 'Unknown Number'}
                                                     </p>
-                                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                    <div className="flex items-center gap-2 text-xs text-[#d1d5db]">
                                                         <span>{new Date(log.created_at).toLocaleString()}</span>
                                                         <span>•</span>
                                                         <span>{formatDuration(log.duration)}</span>
                                                         <span>•</span>
-                                                        <span className={`uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${log.outcome === 'Completed' || (log.duration || 0) > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                                        <span className={`uppercase font-bold tracking-wider px-2 py-0.5 rounded text-[10px] ${log.outcome === 'Completed' || (log.duration || 0) > 0 ? 'bg-green-900/30 text-green-400 border border-green-800/50' : 'bg-yellow-900/30 text-yellow-400 border border-yellow-800/50'
                                                             }`}>
                                                             {log.outcome || (log.duration > 0 ? 'Connected' : 'Attempted')}
                                                         </span>
@@ -242,17 +242,17 @@ export const CallLogs: React.FC = () => {
                                             <div className="flex items-center gap-4">
                                                 {log.recording_url && (
                                                     <div onClick={e => e.stopPropagation()}>
-                                                        <audio controls src={log.recording_url} className="h-8 w-60" />
+                                                        <audio controls src={log.recording_url} className="h-8 w-60 opacity-90 invert hue-rotate-180" />
                                                     </div>
                                                 )}
-                                                <i className={`fas fa-chevron-down text-gray-400 transition-transform ${expandedId === log.id ? 'rotate-180' : ''}`}></i>
+                                                <i className={`fas fa-chevron-down text-[#e5e7eb] transition-transform ${expandedId === log.id ? 'rotate-180' : ''}`}></i>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setLogToDelete(log.id);
                                                         setIsDeleteModalOpen(true);
                                                     }}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all ml-2"
+                                                    className="p-2 text-[#e5e7eb] hover:text-red-600 hover:bg-red-50 rounded transition-all ml-2"
                                                     title="Delete Log"
                                                 >
                                                     <i className="fas fa-trash-alt"></i>
@@ -261,8 +261,8 @@ export const CallLogs: React.FC = () => {
                                         </div>
 
                                         {expandedId === log.id && (
-                                            <div className="mt-4 pl-14 pr-4 py-4 bg-gray-50 rounded-md border border-gray-100 text-sm text-gray-700">
-                                                <h4 className="font-bold text-xs uppercase text-gray-500 mb-2">Transcript & Analysis</h4>
+                                            <div className="mt-4 pl-14 pr-4 py-4 bg-[#1a1a1a] rounded-md border border-gray-100 text-sm text-gray-700">
+                                                <h4 className="font-bold text-xs uppercase text-[#d1d5db] mb-2">Transcript & Analysis</h4>
                                                 <p className="whitespace-pre-wrap font-mono text-xs text-gray-600">{log.transcript}</p>
                                             </div>
                                         )}
@@ -289,7 +289,7 @@ export const CallLogs: React.FC = () => {
                                 setIsDeleteModalOpen(false);
                                 setLogToDelete(null);
                             }}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-[#080808] border border-[#525252] rounded-md hover:bg-[#1a1a1a]"
                         >
                             Cancel
                         </button>
@@ -312,7 +312,7 @@ export const CallLogs: React.FC = () => {
                     </>
                 }
             >
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#d1d5db]">
                     Are you sure you want to delete this call log? This action cannot be undone.
                 </p>
             </Modal>

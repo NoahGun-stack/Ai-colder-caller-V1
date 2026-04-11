@@ -122,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
     : 0;
 
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-6 bg-[#f8f9fb]">
+    <div className="h-full overflow-y-auto p-6 space-y-6 bg-[#1a1a1a]">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           {
@@ -146,17 +146,17 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
             sub: 'Operational efficiency'
           },
         ].map((stat, i) => (
-          <div key={i} className="bg-white border border-[#e5e7eb] p-5 shadow-sm">
-            <p className="text-[11px] font-bold text-[#6b7280] uppercase tracking-wide mb-1">{stat.label}</p>
-            <h3 className="text-2xl font-bold text-[#111827]">{stat.value}</h3>
-            <p className="text-[10px] text-[#6b7280] mt-2 font-medium">{stat.sub}</p>
+          <div key={i} className="bg-[#080808] border border-[#404040] p-5 shadow-sm">
+            <p className="text-[11px] font-bold text-[#d1d5db] uppercase tracking-wide mb-1">{stat.label}</p>
+            <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
+            <p className="text-[10px] text-[#d1d5db] mt-2 font-medium">{stat.sub}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white border border-[#e5e7eb] p-6 shadow-sm">
-          <h4 className="text-[11px] font-bold text-[#111827] uppercase mb-8 border-b border-[#f3f4f6] pb-3">Call Volume (Last 7 Days)</h4>
+        <div className="lg:col-span-2 bg-[#080808] border border-[#404040] p-6 shadow-sm">
+          <h4 className="text-[11px] font-bold text-white uppercase mb-8 border-b border-[#f3f4f6] pb-3">Call Volume (Last 7 Days)</h4>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
@@ -170,19 +170,19 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
           </div>
         </div>
 
-        <div className="bg-white border border-[#e5e7eb] shadow-sm flex flex-col">
-          <div className="p-4 border-b border-[#e5e7eb] bg-[#f8f9fb]">
-            <h4 className="text-[11px] font-bold text-[#111827] uppercase">Recent Activity</h4>
+        <div className="bg-[#080808] border border-[#404040] shadow-sm flex flex-col">
+          <div className="p-4 border-b border-[#404040] bg-[#1a1a1a]">
+            <h4 className="text-[11px] font-bold text-white uppercase">Recent Activity</h4>
           </div>
           <div className="flex-1 overflow-y-auto">
             <table className="w-full text-left table-dense">
               <tbody>
                 {recentActivity.length > 0 ? recentActivity.map((act, idx) => (
-                  <tr key={idx} className="hover:bg-[#f8f9fb] transition-colors">
-                    <td className="px-4 py-3 font-bold text-[#111827] text-sm">{act.ref}</td>
+                  <tr key={idx} className="hover:bg-[#1a1a1a] transition-colors">
+                    <td className="px-4 py-3 font-bold text-white text-sm">{act.ref}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase ${act.status === 'Completed' ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#e5e7eb] text-[#6b7280]'
+                        <span className={`px-2 py-0.5 border text-[10px] font-bold uppercase ${act.status === 'Completed' ? 'border-green-200 text-green-700 bg-green-50' : 'border-[#404040] text-[#d1d5db]'
                           }`}>
                           {act.status}
                         </span>
@@ -200,10 +200,10 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
                         </button>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-xs text-gray-400">{act.time}</td>
+                    <td className="px-4 py-3 text-right text-xs text-[#e5e7eb]">{act.time}</td>
                   </tr>
                 )) : (
-                  <tr><td className="p-4 text-center text-xs text-gray-500">No recent activity</td></tr>
+                  <tr><td className="p-4 text-center text-xs text-[#d1d5db]">No recent activity</td></tr>
                 )}
               </tbody>
             </table>
@@ -226,7 +226,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
                 setIsDeleteModalOpen(false);
                 setLogToDelete(null);
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-[#080808] border border-[#525252] rounded-md hover:bg-[#1a1a1a]"
             >
               Cancel
             </button>
@@ -251,7 +251,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contacts }) => {
           </>
         }
       >
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[#d1d5db]">
           Are you sure you want to delete this call log? This action cannot be undone.
         </p>
       </Modal>
