@@ -25,7 +25,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('calls');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContactForCall, setSelectedContactForCall] = useState<Contact | null>(null);
-  const [selectedCampaign, setSelectedCampaign] = useState<'residential' | 'b2b' | 'staffing' | 'painting'>('residential');
+  const [selectedCampaign, setSelectedCampaign] = useState<'residential' | 'b2b' | 'staffing'>('residential');
   const [callQueue, setCallQueue] = useState<Contact[]>([]);
   const [isAutoPilot, setIsAutoPilot] = useState(false);
   const [isBatchMode, setIsBatchMode] = useState(false);
@@ -118,7 +118,7 @@ const App: React.FC = () => {
       if (data) {
         setUserProfile(data);
         if (data.assigned_campaign) {
-          setSelectedCampaign(data.assigned_campaign as 'residential' | 'b2b' | 'staffing' | 'painting');
+          setSelectedCampaign(data.assigned_campaign as 'residential' | 'b2b' | 'staffing');
         }
       }
     } catch (error) {
@@ -128,7 +128,7 @@ const App: React.FC = () => {
 
 
 
-  const handleStartCall = (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' | 'painting' = 'residential') => {
+  const handleStartCall = (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
     setSelectedContactForCall(contact);
     setSelectedCampaign(campaign);
     setCallQueue([]); // Clear queue for single call
@@ -137,7 +137,7 @@ const App: React.FC = () => {
 
   const [batchConcurrency, setBatchConcurrency] = useState(10);
 
-  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10, campaign: 'residential' | 'b2b' | 'staffing' | 'painting' = 'residential') => {
+  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
     if (contactsToDial.length === 0) return;
     setCallQueue(contactsToDial);
     setSelectedCampaign(campaign);

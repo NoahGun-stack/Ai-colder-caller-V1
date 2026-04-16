@@ -51,6 +51,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
         }
     };
 
+    const deleteUser = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setProfiles(profiles.filter(p => p.id !== id));
+        } catch (err: any) {
+            console.error('Error deleting profile:', err);
+            alert('Failed to delete profile: ' + err.message);
+        }
+    };
+
     if (!currentUser || currentUser.role !== 'admin') {
         return (
             <div className="flex items-center justify-center h-full">
@@ -84,16 +102,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                                 <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">System Role</th>
                                 <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">Assigned Agent (Campaign)</th>
                                 <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-4 text-[11px] font-black text-[#d1d5db] uppercase tracking-widest">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#e5e7eb]">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-[#d1d5db]">Loading users...</td>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-[#d1d5db]">Loading users...</td>
                                 </tr>
                             ) : profiles.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-sm text-[#d1d5db]">No users found.</td>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-[#d1d5db]">No users found.</td>
                                 </tr>
                             ) : (
                                 profiles.map((profile) => (
@@ -118,7 +137,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                                         <td className="px-6 py-4">
                                             <select
                                                 value={profile.assigned_campaign}
-                                                onChange={(e) => updateProfile(profile.id, { assigned_campaign: e.target.value as 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate' })}
+                                                onChange={(e) => updateProfile(profile.id, { assigned_campaign: e.target.value as 'residential' | 'b2b' | 'staffing' | 'real_estate' })}
                                                 className={`text-[11px] font-bold uppercase px-2 py-1 rounded border outline-none cursor-pointer w-full max-w-[200px] ${profile.assigned_campaign === 'b2b'
                                                     ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
                                                     : profile.assigned_campaign === 'staffing'
@@ -129,7 +148,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                                                 <option value="residential">Residential (Jon)</option>
                                                 <option value="b2b">B2B Sales (Alex)</option>
                                                 <option value="staffing">Staffing (Sarah)</option>
-                                                <option value="painting">Painting (Taylor)</option>
                                                 <option value="real_estate">Home Buyer (Mike)</option>
                                             </select>
                                         </td>
@@ -137,6 +155,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 Active
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <button
+                                                onClick={() => deleteUser(profile.id)}
+                                                className="text-red-500 hover:text-red-700 text-xs font-bold uppercase transition-colors"
+                                                title="Delete User"
+                                            >
+                                                Delete
+                                            </button>
                                         </td>
                                     </tr>
                                 ))

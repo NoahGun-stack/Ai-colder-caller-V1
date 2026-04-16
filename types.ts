@@ -66,5 +66,5 @@ export interface UserProfile {
   id: string;
   email: string;
   role: 'admin' | 'user';
-  assigned_campaign: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate';
+  assigned_campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate';
 }

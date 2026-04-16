@@ -10,7 +10,7 @@ export const vapiService = {
      * @param customerAddress Address for context
      * @param contactId Database ID of the contact for tracking
      */
-    async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string, contactId: string, campaign: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate' = 'residential') {
+    async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string, contactId: string, campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' = 'residential') {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
         const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID_ACTIVE;
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
@@ -227,102 +227,7 @@ export const vapiService = {
                     enabled: true
                 }
             };
-        } else if (campaign === 'painting') {
-            // --- PAINTING ESTIMATE AGENT CONFIG ---
-            assistantConfig = {
-                firstMessage: `Hi, is this ${customerName}?`,
-                transcriber: {
-                    provider: "deepgram",
-                    model: "nova-2",
-                    language: "en-US"
-                },
-                model: {
-                    provider: "openai",
-                    model: "gpt-4o",
-                    messages: [
-                        {
-                            role: "system",
-                            content: `You are Taylor, a professional appointment coordinator for an exterior and interior painting company. You are friendly, helpful, and natural.
-                            
-                            CONTEXT:
-                            - Prospect Name: ${customerName}
-                            - Prospect Address: ${customerAddress}
-                            - Today is: ${estDate}
 
-                            INSTRUCTIONS:
-                            1. OPENING:
-                               - "Hi, is this ${customerName}?"
-                               - Once confirmed: "Hi ${customerName}, this is Taylor with [Painting Company]. We are working on a few homes in your neighborhood this week giving out free estimates for exterior and interior painting. Would you be open to having us take a quick look and give you a free, no-obligation quote for a paint job?"
-
-                            2. OBJECTION HANDLING:
-                               - "We don't need painting right now": "I completely understand. Sometimes a fresh coat is the easiest way to protect the home's value, even if it's just touching up the trim. Would it hurt to just get a free estimate so you have it on file for later?"
-                               - "How much does it cost?": "The estimate is completely free. We just need to stop by to take some measurements so we can give you an accurate price."
-
-                            3. GOAL:
-                               - Set up an appointment for a sales rep to visit the home to provide the estimate for the paint job.
-                               - Ask: "What day and time works best for you to have someone stop by?"
-                               - Once a time is agreed, IMMEDIATELY call the "book_appointment" tool.
-
-                            4. QUALIFICATION:
-                               - After booking the time, ask: "Are we looking at exterior painting, interior, or both?"
-                               - "And are you the homeowner there at ${customerAddress}?"
-
-                            5. POST-BOOKING:
-                               - "Perfect, we are all set for [Time]. A member of our team will see you then. Thanks for your time, ${customerName}!"
-
-                            6. SYSTEM SETTINGS:
-                               - Format booking time as "YYYY-MM-DDTHH:MM:SS-06:00".`
-                        }
-                    ],
-                    tools: [
-                        {
-                            type: "function",
-                            function: {
-                                name: "book_appointment",
-                                description: "Books a painting estimate appointment so a sales rep can visit the home.",
-                                parameters: {
-                                    type: "object",
-                                    properties: {
-                                        datetime: { type: "string", description: "ISO 8601 datetime" },
-                                        notes: { type: "string" }
-                                    },
-                                    required: ["datetime"]
-                                }
-                            },
-                            async: false,
-                            server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
-                        },
-                        {
-                            type: "function",
-                            function: {
-                                name: "update_address",
-                                description: "Updates the customer's property address if incorrect.",
-                                parameters: {
-                                    type: "object",
-                                    properties: {
-                                        new_address: { type: "string", description: "The full corrected address provided by the user." }
-                                    },
-                                    required: ["new_address"]
-                                }
-                            },
-                            async: false,
-                            server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
-                        }
-                    ]
-                },
-                voice: {
-                    provider: "11labs",
-                    voiceId: "EXAVITQu4vr4xnSDxMaL" // Bella (Professional Female)
-                },
-                recordingEnabled: true,
-                serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`,
-                endCallFunctionEnabled: true,
-                voicemailDetection: {
-                    provider: "twilio",
-                    voicemailDetectionTypes: ["machine_start", "machine_end_beep", "machine_end_other"],
-                    enabled: true
-                }
-            };
         } else if (campaign === 'real_estate') {
             // --- REAL ESTATE AGENT CONFIG ---
             assistantConfig = {

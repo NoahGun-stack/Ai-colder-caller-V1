@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { CampaignConfig } from '../types';
 
 interface CampaignConfiguratorProps {
-    selectedCampaign?: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate';
-    setSelectedCampaign?: (campaign: 'residential' | 'b2b' | 'staffing' | 'painting' | 'real_estate') => void;
+    selectedCampaign?: 'residential' | 'b2b' | 'staffing' | 'real_estate';
+    setSelectedCampaign?: (campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate') => void;
 }
 
 export const CampaignConfigurator: React.FC<CampaignConfiguratorProps> = ({ selectedCampaign = 'residential', setSelectedCampaign }) => {
@@ -84,12 +84,6 @@ export const CampaignConfigurator: React.FC<CampaignConfiguratorProps> = ({ sele
                                         className={`flex-1 py-2 text-[10px] font-bold uppercase transition-all ${selectedCampaign === 'staffing' ? 'bg-orange-500 text-white border border-orange-700' : 'bg-[#080808] text-[#d1d5db] border border-[#404040]'}`}
                                     >
                                         Staffing
-                                    </button>
-                                    <button
-                                        onClick={() => setSelectedCampaign('painting')}
-                                        className={`flex-1 py-2 text-[10px] font-bold uppercase transition-all ${selectedCampaign === 'painting' ? 'bg-purple-600 text-white border border-purple-800' : 'bg-[#080808] text-[#d1d5db] border border-[#404040]'}`}
-                                    >
-                                        Painting
                                     </button>
                                     <button
                                         onClick={() => setSelectedCampaign('real_estate')}
