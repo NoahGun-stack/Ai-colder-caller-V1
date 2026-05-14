@@ -10,9 +10,9 @@ import { Modal } from './Modal';
 interface ContactManagementProps {
     contacts: Contact[];
     setContacts: React.Dispatch<React.SetStateAction<Contact[]>>;
-    onStartCall: (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate') => void;
-    onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean, concurrency?: number, campaign?: 'residential' | 'b2b' | 'staffing' | 'real_estate') => void;
-    activeCampaign?: 'residential' | 'b2b' | 'staffing' | 'real_estate';
+    onStartCall: (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai') => void;
+    onStartPowerDial?: (contacts: Contact[], autoPilot?: boolean, batchMode?: boolean, concurrency?: number, campaign?: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai') => void;
+    activeCampaign?: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai';
 }
 
 const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setContacts, onStartCall, onStartPowerDial, activeCampaign = 'residential' }) => {
@@ -31,7 +31,7 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
     const [addContactForm, setAddContactForm] = useState({ firstName: '', lastName: '', phoneNumber: '', address: '' });
 
     const [isPowerDialModalOpen, setIsPowerDialModalOpen] = useState(false);
-    const [powerDialConfig, setPowerDialConfig] = useState<{ contacts: Contact[], limit: number, campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' }>({
+    const [powerDialConfig, setPowerDialConfig] = useState<{ contacts: Contact[], limit: number, campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai' }>({
         contacts: [],
         limit: 5,
         campaign: activeCampaign || 'residential'
@@ -618,7 +618,8 @@ const ContactManagement: React.FC<ContactManagementProps> = ({ contacts, setCont
                             { id: 'residential', label: 'Residential (Jon - Inspection)', icon: 'fa-home' },
                             { id: 'b2b', label: 'B2B Sales (Alex - Demo)', icon: 'fa-briefcase' },
                             { id: 'staffing', label: 'Staffing (Sarah - Recruitment)', icon: 'fa-users' },
-                            { id: 'real_estate', label: 'Home Buyer (Mike - Cash Offer)', icon: 'fa-house-damage' }
+                            { id: 'real_estate', label: 'Home Buyer (Mike - Cash Offer)', icon: 'fa-house-damage' },
+                            { id: 'realtor_ai', label: 'Realtor AI (Josh - SaaS)', icon: 'fa-robot' }
                         ].map((camp) => (
                             <button
                                 key={camp.id}

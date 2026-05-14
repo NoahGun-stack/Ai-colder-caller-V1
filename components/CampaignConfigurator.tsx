@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { CampaignConfig } from '../types';
 
 interface CampaignConfiguratorProps {
-    selectedCampaign?: 'residential' | 'b2b' | 'staffing' | 'real_estate';
-    setSelectedCampaign?: (campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate') => void;
+    selectedCampaign?: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai';
+    setSelectedCampaign?: (campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai') => void;
 }
 
 export const CampaignConfigurator: React.FC<CampaignConfiguratorProps> = ({ selectedCampaign = 'residential', setSelectedCampaign }) => {
@@ -90,6 +90,12 @@ export const CampaignConfigurator: React.FC<CampaignConfiguratorProps> = ({ sele
                                         className={`flex-1 py-2 text-[10px] font-bold uppercase transition-all ${selectedCampaign === 'real_estate' ? 'bg-green-600 text-white border border-green-800' : 'bg-[#080808] text-[#d1d5db] border border-[#404040]'}`}
                                     >
                                         Home Buyer
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedCampaign('realtor_ai')}
+                                        className={`flex-1 py-2 text-[10px] font-bold uppercase transition-all ${selectedCampaign === 'realtor_ai' ? 'bg-cyan-600 text-white border border-cyan-800' : 'bg-[#080808] text-[#d1d5db] border border-[#404040]'}`}
+                                    >
+                                        Realtor AI
                                     </button>
                                 </div>
                             </div>

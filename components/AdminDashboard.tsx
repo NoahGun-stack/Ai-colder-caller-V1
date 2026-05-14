@@ -55,10 +55,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
         if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
 
         try {
-            const { error } = await supabase
-                .from('profiles')
-                .delete()
-                .eq('id', id);
+            const { error } = await supabase.rpc('admin_delete_user', { target_user_id: id });
 
             if (error) throw error;
 
@@ -137,7 +134,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                                         <td className="px-6 py-4">
                                             <select
                                                 value={profile.assigned_campaign}
-                                                onChange={(e) => updateProfile(profile.id, { assigned_campaign: e.target.value as 'residential' | 'b2b' | 'staffing' | 'real_estate' })}
+                                                onChange={(e) => updateProfile(profile.id, { assigned_campaign: e.target.value as 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai' })}
                                                 className={`text-[11px] font-bold uppercase px-2 py-1 rounded border outline-none cursor-pointer w-full max-w-[200px] ${profile.assigned_campaign === 'b2b'
                                                     ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
                                                     : profile.assigned_campaign === 'staffing'
@@ -149,6 +146,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) =
                                                 <option value="b2b">B2B Sales (Alex)</option>
                                                 <option value="staffing">Staffing (Sarah)</option>
                                                 <option value="real_estate">Home Buyer (Mike)</option>
+                                                <option value="realtor_ai">Realtor AI (Josh)</option>
                                             </select>
                                         </td>
                                         <td className="px-6 py-4">

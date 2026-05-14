@@ -25,7 +25,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('calls');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContactForCall, setSelectedContactForCall] = useState<Contact | null>(null);
-  const [selectedCampaign, setSelectedCampaign] = useState<'residential' | 'b2b' | 'staffing'>('residential');
+  const [selectedCampaign, setSelectedCampaign] = useState<'residential' | 'b2b' | 'staffing' | 'realtor_ai'>('residential');
   const [callQueue, setCallQueue] = useState<Contact[]>([]);
   const [isAutoPilot, setIsAutoPilot] = useState(false);
   const [isBatchMode, setIsBatchMode] = useState(false);
@@ -118,7 +118,7 @@ const App: React.FC = () => {
       if (data) {
         setUserProfile(data);
         if (data.assigned_campaign) {
-          setSelectedCampaign(data.assigned_campaign as 'residential' | 'b2b' | 'staffing');
+          setSelectedCampaign(data.assigned_campaign as 'residential' | 'b2b' | 'staffing' | 'realtor_ai');
         }
       }
     } catch (error) {
@@ -128,7 +128,7 @@ const App: React.FC = () => {
 
 
 
-  const handleStartCall = (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
+  const handleStartCall = (contact: Contact, campaign: 'residential' | 'b2b' | 'staffing' | 'realtor_ai' = 'residential') => {
     setSelectedContactForCall(contact);
     setSelectedCampaign(campaign);
     setCallQueue([]); // Clear queue for single call
@@ -137,7 +137,7 @@ const App: React.FC = () => {
 
   const [batchConcurrency, setBatchConcurrency] = useState(10);
 
-  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10, campaign: 'residential' | 'b2b' | 'staffing' = 'residential') => {
+  const handleStartPowerDial = (contactsToDial: Contact[], autoPilot = false, batchMode = false, concurrency = 10, campaign: 'residential' | 'b2b' | 'staffing' | 'realtor_ai' = 'residential') => {
     if (contactsToDial.length === 0) return;
     setCallQueue(contactsToDial);
     setSelectedCampaign(campaign);
@@ -206,7 +206,7 @@ const App: React.FC = () => {
       <div className="flex min-h-screen items-center justify-center bg-[#1a1a1a]">
         <div className="w-full max-w-md bg-[#080808] p-8 border border-[#404040] shadow-sm">
           <div className="mb-6 text-center">
-            <div className="text-[#d4a843] font-black text-2xl tracking-tighter mb-2">HARLOW<span className="font-light">AI</span>GROUP</div>
+            <div className="text-[#d4a843] font-black text-2xl tracking-tighter mb-2">NEURO<span className="font-light">LINE</span></div>
             <p className="text-sm text-[#d1d5db] mt-2">Update your password</p>
           </div>
           <form
@@ -239,7 +239,7 @@ const App: React.FC = () => {
       {/* Navigation Sidebar */}
       <aside className="w-[200px] bg-[#1a1a1a] border-r border-[#404040] flex flex-col shrink-0">
         <div className="h-14 flex items-center px-5 border-b border-[#404040]">
-          <div className="text-[#d4a843] font-black text-lg tracking-tighter">HARLOW<span className="font-light">AI</span>GROUP</div>
+          <div className="text-[#d4a843] font-black text-lg tracking-tighter">NEURO<span className="font-light">LINE</span></div>
         </div>
 
         <nav className="flex-1 py-4 overflow-y-auto">

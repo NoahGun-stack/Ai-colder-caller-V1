@@ -7,7 +7,7 @@ interface BatchMonitorProps {
     concurrency: number;
     onClose: () => void;
     onComplete: () => void;
-    campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate';
+    campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai';
 }
 
 interface ActiveCall {

@@ -12,7 +12,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             <header className="fixed w-full z-50 bg-[#080808]/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="text-[#d4a843] font-black text-xl tracking-tighter">HARLOW<span className="font-light">AI</span>GROUP</div>
+                        <div className="text-[#d4a843] font-black text-xl tracking-tighter">NEURO<span className="font-light">LINE</span></div>
                     </div>
                     <button
                         onClick={onSignIn}
@@ -123,7 +123,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                                         <div className="flex gap-4">
                                             <span className="text-[#e5e7eb] w-16 shrink-0">[10:02:15]</span>
                                             <span className="text-[#d4a843] font-bold">Agent:</span>
-                                            <span className="text-white">Hi John, it's Alex from Harlow AI Group. Did I catch you at a bad time?</span>
+                                            <span className="text-white">Hi John, it's Alex from Neuroline. Did I catch you at a bad time?</span>
                                         </div>
                                         <div className="flex gap-4">
                                             <span className="text-[#e5e7eb] w-16 shrink-0">[10:02:18]</span>
@@ -153,13 +153,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 <footer className="bg-[#080808] border-t border-gray-100 py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div className="text-[#d4a843] font-black text-lg tracking-tighter opacity-50">HARLOW<span className="font-light">AI</span>GROUP</div>
-                            <span className="text-sm text-[#d1d5db] font-medium">Harlow AI Group © 2026</span>
+                            <div className="text-[#d4a843] font-black text-lg tracking-tighter opacity-50">NEURO<span className="font-light">LINE</span></div>
+                            <span className="text-sm text-[#d1d5db] font-medium">Neuroline © 2026</span>
                         </div>
                         <div className="flex gap-6">
                             <a href="#" className="text-sm text-[#e5e7eb] hover:text-[#d4a843] transition-colors">Privacy Policy</a>
                             <a href="#" className="text-sm text-[#e5e7eb] hover:text-[#d4a843] transition-colors">Terms of Service</a>
-                            <a href="mailto:contact@harlowaigroup.com" className="text-sm text-[#e5e7eb] hover:text-[#d4a843] transition-colors">Contact</a>
+                            <a href="mailto:contact@neuroline.com" className="text-sm text-[#e5e7eb] hover:text-[#d4a843] transition-colors">Contact</a>
                         </div>
                     </div>
                 </footer>

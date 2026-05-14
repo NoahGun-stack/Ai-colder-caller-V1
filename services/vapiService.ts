@@ -10,7 +10,7 @@ export const vapiService = {
      * @param customerAddress Address for context
      * @param contactId Database ID of the contact for tracking
      */
-    async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string, contactId: string, campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' = 'residential') {
+    async initiateOutboundCall(phoneNumber: string, customerName: string, customerAddress: string, contactId: string, campaign: 'residential' | 'b2b' | 'staffing' | 'real_estate' | 'realtor_ai' = 'residential') {
         const apiKey = import.meta.env.VITE_VAPI_PRIVATE_KEY;
         const phoneNumberId = import.meta.env.VITE_VAPI_PHONE_NUMBER_ID_ACTIVE;
         const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID;
@@ -402,6 +402,132 @@ export const vapiService = {
                     speed: 1.05,
                     stability: 0.5,
                     similarityBoost: 0.75
+                },
+                recordingEnabled: true,
+                serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`,
+                endCallFunctionEnabled: true,
+                voicemailDetection: {
+                    provider: "twilio",
+                    voicemailDetectionTypes: ["machine_start", "machine_end_beep", "machine_end_other"],
+                    enabled: true
+                }
+            };
+        } else if (campaign === 'realtor_ai') {
+            // --- REALTOR AI (JOSH) AGENT CONFIG ---
+            assistantConfig = {
+                firstMessage: `Hello, ${customerName}?`,
+                transcriber: {
+                    provider: "deepgram",
+                    model: "nova-2",
+                    language: "en-US"
+                },
+                model: {
+                    provider: "openai",
+                    model: "gpt-4o",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `**AI COLD CALL SCRIPT – SELLING AI COLD CALLER TO REALTORS**
+
+                            **1. OBJECTIVE**
+                            - Hook attention
+                            - Identify if they currently prospect
+                            - Expose inefficiency (manual calling / no outbound)
+                            - Position AI as revenue lever
+                            - Book demo
+                            Target call time: 60–120 seconds
+
+                            **2. OPENING (PATTERN INTERRUPT)**
+                            You will start by saying: "Hello, ${customerName}?" (This is your first message).
+                            WAIT for them to respond (e.g., "Yes", "Speaking", "Who is this?").
+                            ONCE THEY RESPOND, say: "Hey, quick question—do you want the good news or the bad news first?"
+                            IF THEY ENGAGE:
+                            - If "good news": "Good news—you’re sitting on deals you’re not even seeing yet."
+                            - If "bad news": "Bad news—those deals are getting picked up by agents using AI calling right now."
+                            IMMEDIATE PIVOT (IMPORTANT):
+                            "Either way, I’ll be quick—are you currently doing any outbound prospecting for listings, or mostly relying on inbound?"
+
+                            **3. QUALIFYING**
+                            IF THEY DO OUTBOUND:
+                            "Got it—are you doing that yourself or do you have someone making calls for you?"
+                            (Follow-up) "How many conversations are you realistically getting with homeowners per day?"
+                            IF THEY DON’T DO OUTBOUND:
+                            "That’s actually why I reached out—most agents aren’t, and that’s where the biggest opportunity is right now."
+
+                            **4. PROBLEM AGITATION**
+                            "Most agents either don’t have time to cold call, or they burn money on dialers and VAs that don’t convert."
+                            "What we built is an AI caller that can call thousands of homeowners, qualify them, and only send you the ones actually open to selling."
+
+                            **5. CORE PITCH (KEEP TIGHT)**
+                            "It basically replaces the entire prospecting side—so instead of chasing leads, you just get booked calls with homeowners already open to offers."
+
+                            **6. INTEREST CHECK**
+                            "Is that something you’d at least want to see how it works?"
+
+                            **7. CLOSE (BOOK DISCOVERY CALL)**
+                            IF YES:
+                            "Perfect—let's book a quick discovery call with Noah to see if it would actually be worth it for you."
+                            "Would later today or tomorrow be better?"
+                            - Wait for them to give a day, then ask: "What specific time works best for you on that day?"
+                            - Wait for them to confirm a specific date and time.
+                            IF HESITATION:
+                            "No pressure—it’s just a quick chat with Noah to see if the math makes sense for your setup."
+                            "Worst case, you get the strategy."
+                            Once a specific date and time is agreed upon, IMMEDIATELY call the "book_appointment" tool.
+
+                            **8. OBJECTION HANDLING**
+                            "Who is this?" or "What company is this?" -> "This is Noah with NEUROLINE."
+                            "I already have leads" -> "Totally—this doesn’t replace that, it just adds another channel so you’re not dependent on one source."
+                            "I don’t like cold calling" -> "Yeah—that’s exactly why people use this. You don’t have to do it."
+                            "Send me info" -> "Yeah I can—usually easier if I just show you real quick so it actually makes sense. What time works best?"
+                            "How much is it?" -> "It depends on how many calls you want per month, but on average we offer ten thousand calls per month for four thousand a month."
+
+                            **9. AI DELIVERY RULES**
+                            - Keep responses under 2 sentences
+                            - Pause after questions
+                            - If interrupted → STOP immediately
+                            - Acknowledge, then redirect: "Yeah that makes sense—quick question…"
+
+                            **10. TAGGING**
+                            At the end, note: PROSPECTING (YES/NO), INTEREST (HIGH/MEDIUM/LOW), APPOINTMENT (SET/NOT SET), OBJECTION TYPE.
+
+                            **11. PERFORMANCE NOTES & STYLE (EXTREMELY CONVERSATIONAL)**
+                            - You are NOT a robot reading a script. You are a real human having a casual chat.
+                            - EXTREME BREVITY: Speak in short, punchy fragments. Never ramble. Stop talking after 1 or 2 sentences max.
+                            - PASS THE MIC: After you make a point, always ask a short question to get them talking (e.g., "Make sense?", "Are you seeing that too?", "Right?").
+                            - ACTIVE LISTENING: Always acknowledge their answer before moving to the next point (e.g., "Gotcha", "Yeah, totally", "100 percent").
+                            - HUMANIZE: Use filler words naturally ("um", "uh", "like", "you know"). Stumble over your words slightly or laugh if appropriate.
+                            - TONE: Relaxed, confident, young male SDR. Do not use corporate jargon. Talk like you're talking to a friend.
+                            `
+                        }
+                    ],
+                    tools: [
+                        {
+                            type: "function",
+                            function: {
+                                name: "book_appointment",
+                                description: "Books a discovery call with Noah to see if the AI caller is worth it.",
+                                parameters: {
+                                    type: "object",
+                                    properties: {
+                                        datetime: { type: "string", description: "ISO 8601 datetime" },
+                                        notes: { type: "string" }
+                                    },
+                                    required: ["datetime"]
+                                }
+                            },
+                            async: false,
+                            server: { url: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook` }
+                        }
+                    ]
+                },
+                voice: {
+                    provider: "11labs",
+                    voiceId: "burt",
+                    speed: 1.1,
+                    stability: 0.5,
+                    similarityBoost: 0.75,
+                    optimizeStreamingLatency: 3
                 },
                 recordingEnabled: true,
                 serverUrl: `https://jvnovvuihlwircmssfqj.supabase.co/functions/v1/vapi-webhook`,

@@ -45,7 +45,7 @@ const Auth: React.FC = () => {
         <div className="flex min-h-screen items-center justify-center bg-[#1a1a1a]">
             <div className="w-full max-w-md bg-[#080808] p-8 border border-[#404040] shadow-sm">
                 <div className="mb-6 text-center">
-                    <div className="text-[#d4a843] font-black text-2xl tracking-tighter mb-2">HARLOW<span className="font-light">AI</span>GROUP</div>
+                    <div className="text-[#d4a843] font-black text-2xl tracking-tighter mb-2">NEURO<span className="font-light">LINE</span></div>
                     <h1 className="text-xl font-bold text-white">Welcome Back</h1>
                     <p className="text-sm text-[#d1d5db] mt-2">
                         {view === 'sign_up' ? 'Create your account' :
